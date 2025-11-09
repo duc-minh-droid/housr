@@ -25,6 +25,7 @@ export function CreateRentPlanModal({ isOpen, onClose, onSuccess }: CreateRentPl
   const [isSearching, setIsSearching] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchError, setSearchError] = useState('');
   const searchTimeout = useRef<NodeJS.Timeout>();
 
   const [formData, setFormData] = useState({
@@ -40,10 +41,12 @@ export function CreateRentPlanModal({ isOpen, onClose, onSuccess }: CreateRentPl
     if (searchQuery.trim().length < 2) {
       setSearchResults([]);
       setShowDropdown(false);
+      setSearchError('');
       return;
     }
 
     setIsSearching(true);
+    setSearchError('');
     
     if (searchTimeout.current) {
       clearTimeout(searchTimeout.current);
@@ -64,10 +67,16 @@ export function CreateRentPlanModal({ isOpen, onClose, onSuccess }: CreateRentPl
         if (response.ok) {
           const data = await response.json();
           setSearchResults(data.users || []);
+          if (data.users && data.users.length === 0) {
+            setSearchError(`No tenant found with username "${searchQuery}"`);
+          }
           setShowDropdown(true);
+        } else {
+          setSearchError('Failed to search users');
         }
       } catch (error) {
         console.error('Search error:', error);
+        setSearchError('Search failed. Please try again.');
       } finally {
         setIsSearching(false);
       }
@@ -84,7 +93,22 @@ export function CreateRentPlanModal({ isOpen, onClose, onSuccess }: CreateRentPl
     e.preventDefault();
 
     if (!selectedTenant) {
-      alert('Please select a tenant');
+      alert('Please select a tenant from the search results');
+      return;
+    }
+
+    if (!formData.monthlyRent || parseFloat(formData.monthlyRent) <= 0) {
+      alert('Please enter a valid monthly rent amount');
+      return;
+    }
+
+    if (!formData.deposit || parseFloat(formData.deposit) <= 0) {
+      alert('Please enter a valid deposit amount');
+      return;
+    }
+
+    if (!formData.duration) {
+      alert('Please select a lease duration');
       return;
     }
 
@@ -92,32 +116,40 @@ export function CreateRentPlanModal({ isOpen, onClose, onSuccess }: CreateRentPl
 
     try {
       const token = localStorage.getItem('token');
+      const payload = {
+        tenantUsername: selectedTenant.username,
+        monthlyRent: parseFloat(formData.monthlyRent),
+        deposit: parseFloat(formData.deposit),
+        duration: parseInt(formData.duration),
+        description: formData.description || undefined,
+        startDate: formData.startDate || undefined,
+      };
+
+      console.log('Sending rent plan:', payload);
+
       const response = await fetch('http://localhost:5001/api/rent-plans', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          tenantUsername: selectedTenant.username,
-          monthlyRent: parseFloat(formData.monthlyRent),
-          deposit: parseFloat(formData.deposit),
-          duration: parseInt(formData.duration),
-          description: formData.description || undefined,
-          startDate: formData.startDate || undefined,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
+        const data = await response.json();
+        console.log('Plan created successfully:', data);
+        alert(`Rent plan sent to @${selectedTenant.username} successfully!`);
         onSuccess();
         handleClose();
       } else {
         const error = await response.json();
+        console.error('API error:', error);
         alert(error.error || 'Failed to create rent plan');
       }
     } catch (error) {
       console.error('Submit error:', error);
-      alert('Failed to create rent plan');
+      alert('Failed to create rent plan. Please check your connection.');
     } finally {
       setIsSubmitting(false);
     }
@@ -142,6 +174,7 @@ export function CreateRentPlanModal({ isOpen, onClose, onSuccess }: CreateRentPl
     setSelectedTenant(tenant);
     setSearchQuery(tenant.username);
     setShowDropdown(false);
+    setSearchError('');
   };
 
   return (
@@ -225,9 +258,10 @@ export function CreateRentPlanModal({ isOpen, onClose, onSuccess }: CreateRentPl
                       </motion.div>
                     )}
 
-                    {showDropdown && searchResults.length === 0 && !isSearching && searchQuery.length >= 2 && (
-                      <div className="absolute top-full mt-2 w-full bg-card-bg border border-card-text/20 rounded-xl p-4 text-center text-card-text/70">
-                        No tenants found
+                    {searchError && (
+                      <div className="absolute top-full mt-2 w-full bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-center">
+                        <p className="text-red-500 text-sm font-semibold">{searchError}</p>
+                        <p className="text-xs text-card-text/60 mt-1">Make sure the username is correct</p>
                       </div>
                     )}
                   </div>
@@ -287,16 +321,23 @@ export function CreateRentPlanModal({ isOpen, onClose, onSuccess }: CreateRentPl
                 {/* Duration and Start Date */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-semibold text-card-text/90">Duration (months)</label>
-                    <input
-                      type="number"
+                    <label className="text-sm font-semibold text-card-text/90">Lease Duration</label>
+                    <select
                       value={formData.duration}
                       onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
-                      placeholder="12"
-                      min="1"
-                      className="w-full px-4 py-3 bg-white/5 border border-card-text/20 rounded-xl text-card-text placeholder-card-text/50 focus:outline-none focus:ring-2 focus:ring-primary-light"
+                      className="w-full px-4 py-3 bg-white/5 border border-card-text/20 rounded-xl text-card-text focus:outline-none focus:ring-2 focus:ring-primary-light cursor-pointer"
+                      style={{ WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }}
                       required
-                    />
+                    >
+                      <option value="" style={{ backgroundColor: '#1A1F1C', color: '#E8EDE9' }}>Select duration</option>
+                      <option value="3" style={{ backgroundColor: '#1A1F1C', color: '#E8EDE9' }}>3 months</option>
+                      <option value="6" style={{ backgroundColor: '#1A1F1C', color: '#E8EDE9' }}>6 months</option>
+                      <option value="9" style={{ backgroundColor: '#1A1F1C', color: '#E8EDE9' }}>9 months</option>
+                      <option value="12" style={{ backgroundColor: '#1A1F1C', color: '#E8EDE9' }}>12 months (1 year)</option>
+                      <option value="18" style={{ backgroundColor: '#1A1F1C', color: '#E8EDE9' }}>18 months</option>
+                      <option value="24" style={{ backgroundColor: '#1A1F1C', color: '#E8EDE9' }}>24 months (2 years)</option>
+                      <option value="36" style={{ backgroundColor: '#1A1F1C', color: '#E8EDE9' }}>36 months (3 years)</option>
+                    </select>
                   </div>
 
                   <div className="space-y-2">

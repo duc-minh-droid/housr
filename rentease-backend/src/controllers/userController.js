@@ -16,13 +16,12 @@ export const searchUsers = asyncHandler(async (req, res) => {
         return res.json({ users: [] });
     }
 
-    // Search for tenants by username (case-insensitive partial match)
-    const users = await prisma.user.findMany({
+    // Search for tenants by username (SQLite-compatible search)
+    // Note: SQLite doesn't support mode: 'insensitive', so we do case-insensitive search differently
+    const searchTerm = username.trim().toLowerCase();
+    
+    const allTenants = await prisma.user.findMany({
         where: {
-            username: {
-                contains: username.trim(),
-                mode: 'insensitive',
-            },
             role: 'tenant',
         },
         select: {
@@ -31,11 +30,13 @@ export const searchUsers = asyncHandler(async (req, res) => {
             email: true,
             name: true,
         },
-        take: 10,
-        orderBy: {
-            username: 'asc',
-        },
     });
+
+    // Filter in JavaScript for case-insensitive search
+    const users = allTenants
+        .filter(user => user.username.toLowerCase().includes(searchTerm))
+        .slice(0, 10)
+        .sort((a, b) => a.username.localeCompare(b.username));
 
     res.json({ users });
 });

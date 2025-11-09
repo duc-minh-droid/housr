@@ -179,15 +179,25 @@ export const acceptRentPlan = asyncHandler(async (req, res) => {
     });
 
     // Update plan with session ID and mark as accepted
-    await prisma.rentPlan.update({
-        where: { id: planId },
-        data: {
-            status: 'accepted',
-            stripeSessionId: session.id,
-            acceptedAt: new Date(),
-            reviewedDate: new Date(),
-        },
-    });
+    // Also link tenant to landlord immediately (so they show up in tenant list)
+    await Promise.all([
+        prisma.rentPlan.update({
+            where: { id: planId },
+            data: {
+                status: 'accepted',
+                stripeSessionId: session.id,
+                acceptedAt: new Date(),
+                reviewedDate: new Date(),
+            },
+        }),
+        // Link tenant to landlord if not already linked
+        plan.tenant.landlordId ? Promise.resolve() : prisma.user.update({
+            where: { id: plan.tenantId },
+            data: { landlordId: plan.landlordId },
+        }),
+    ]);
+
+    console.log(`✅ Tenant ${plan.tenant.username} linked to landlord ${plan.landlord.username}`);
 
     res.json({ 
         sessionUrl: session.url,
@@ -274,17 +284,42 @@ export const handleStripeWebhook = asyncHandler(async (req, res) => {
 
         if (rentPlanId) {
             try {
-                // Update the rent plan to completed
-                await prisma.rentPlan.update({
+                // Get the rent plan with tenant and landlord info
+                const plan = await prisma.rentPlan.findUnique({
                     where: { id: rentPlanId },
-                    data: {
-                        status: 'completed',
-                        paymentIntentId: session.payment_intent,
-                        completedDate: new Date(),
-                    },
+                    include: { tenant: true, landlord: true },
                 });
 
-                console.log(`✅ Rent plan ${rentPlanId} marked as completed`);
+                if (plan) {
+                    // Calculate next due date (1 month from start date or now)
+                    const startDate = plan.startDate || new Date();
+                    const nextDueDate = new Date(startDate);
+                    nextDueDate.setMonth(nextDueDate.getMonth() + 1);
+
+                    // Update the rent plan to completed
+                    await prisma.rentPlan.update({
+                        where: { id: rentPlanId },
+                        data: {
+                            status: 'completed',
+                            paymentIntentId: session.payment_intent,
+                            completedDate: new Date(),
+                            nextDueDate: nextDueDate,
+                        },
+                    });
+
+                    // Link tenant to landlord if not already linked
+                    if (!plan.tenant.landlordId) {
+                        await prisma.user.update({
+                            where: { id: plan.tenantId },
+                            data: {
+                                landlordId: plan.landlordId,
+                            },
+                        });
+                        console.log(`✅ Tenant ${plan.tenant.username} linked to landlord ${plan.landlord.username}`);
+                    }
+
+                    console.log(`✅ Rent plan ${rentPlanId} marked as completed with next due date: ${nextDueDate.toISOString()}`);
+                }
             } catch (error) {
                 console.error(`Error updating rent plan ${rentPlanId}:`, error);
             }

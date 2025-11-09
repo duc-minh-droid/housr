@@ -21,7 +21,9 @@ import {
   ChevronRight,
   MessageCircle,
   Sun,
-  Moon
+  Moon,
+  Settings,
+  Building
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
@@ -53,6 +55,7 @@ export function Sidebar({ role }: SidebarProps) {
 
   const landlordLinks = [
     { href: '/dashboard/landlord', label: 'Dashboard', icon: LayoutDashboard, badge: null },
+    { href: '/dashboard/landlord/properties', label: 'Properties', icon: Building, badge: null },
     { href: '/dashboard/landlord/tenants', label: 'Tenants', icon: Users, badge: null },
     { href: '/dashboard/landlord/bills', label: 'Bills', icon: Receipt, badge: null },
     { href: '/dashboard/landlord/rent-plans', label: 'Plans', icon: FileText, badge: null },
@@ -240,6 +243,36 @@ export function Sidebar({ role }: SidebarProps) {
               </motion.div>
             )}
           </AnimatePresence>
+          
+          {/* Settings Button */}
+          <Link href="/dashboard/settings">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className={cn(
+                "w-full mb-2 px-4 py-3 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-xl transition-all flex items-center gap-2",
+                isCollapsed ? "justify-center" : "justify-center"
+              )}
+              title={isCollapsed ? "Settings" : undefined}
+            >
+              <Settings className="w-4 h-4" />
+              <AnimatePresence>
+                {!isCollapsed && (
+                  <motion.span
+                    initial={{ opacity: 0, width: 0 }}
+                    animate={{ opacity: 1, width: 'auto' }}
+                    exit={{ opacity: 0, width: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="whitespace-nowrap"
+                  >
+                    Settings
+                  </motion.span>
+                )}
+              </AnimatePresence>
+            </motion.button>
+          </Link>
+          
+          {/* Logout Button */}
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}

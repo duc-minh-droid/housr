@@ -1,9 +1,10 @@
 import prisma from '../config/db.js';
 
-export const createUser = async ({ email, password, name, role, landlordId }) => {
+export const createUser = async ({ email, username, password, name, role, landlordId }) => {
     return prisma.user.create({
         data: {
             email,
+            username,
             password,
             name,
             role,
