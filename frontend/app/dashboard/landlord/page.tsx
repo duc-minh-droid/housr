@@ -116,10 +116,10 @@ export default function LandlordDashboard() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.4 }}
-          className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm"
+          className="bg-card-bg rounded-xl border border-border p-6 shadow-sm"
         >
-          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Clock className="w-5 h-5 text-yellow-600" />
+          <h2 className="text-xl font-bold text-card-text mb-4 flex items-center gap-2">
+            <Clock className="w-5 h-5 text-yellow-500" />
             Pending Rent Plan Approvals
           </h2>
           <div className="space-y-3">
@@ -129,16 +129,16 @@ export default function LandlordDashboard() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
-                className="flex items-center justify-between p-4 border border-yellow-200 bg-yellow-50 rounded-lg hover:shadow-md transition-all"
+                className="flex items-center justify-between p-4 border border-yellow-500/30 bg-yellow-500/10 rounded-lg hover:bg-yellow-500/20 transition-all"
               >
                 <div>
-                  <p className="font-medium text-gray-900">
+                  <p className="font-medium text-card-text">
                     Tenant ID: {plan.tenantId}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-card-text/70">
                     {formatCurrency(plan.monthlyRent)}/month • {plan.duration} months
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-card-text/70">
                     Deposit: {formatCurrency(plan.deposit)}
                   </p>
                 </div>
@@ -156,14 +156,14 @@ export default function LandlordDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.5 }}
-        className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm"
+        className="bg-card-bg rounded-xl border border-border p-6 shadow-sm"
       >
-        <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-          <DollarSign className="w-5 h-5 text-green-600" />
+        <h2 className="text-xl font-bold text-card-text mb-4 flex items-center gap-2">
+          <DollarSign className="w-5 h-5 text-green-500" />
           Recent Payments
         </h2>
         {paidBills.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">No payments received yet</p>
+          <p className="text-card-text/70 text-center py-8">No payments received yet</p>
         ) : (
           <div className="space-y-3">
             {paidBills.slice(0, 5).map((bill, index) => (
@@ -172,20 +172,20 @@ export default function LandlordDashboard() {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.3, delay: index * 0.05 }}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:shadow-md transition-all"
+                className="flex items-center justify-between p-4 border border-border rounded-lg bg-white/5 hover:bg-white/10 transition-all"
               >
                 <div className="flex items-center gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
+                  <CheckCircle className="w-5 h-5 text-green-500" />
                   <div>
-                    <p className="font-medium text-gray-900">{bill.description}</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="font-medium text-card-text">{bill.description}</p>
+                    <p className="text-sm text-card-text/70">
                       Tenant: {bill.tenantId} • {formatDate(bill.dueDate)}
                     </p>
                   </div>
                 </div>
                 <div className="text-right flex items-center gap-3">
                   <div>
-                    <p className="font-bold text-gray-900">
+                    <p className="font-bold text-card-text">
                       {formatCurrency(bill.amount)}
                     </p>
                     <Badge variant="success">
