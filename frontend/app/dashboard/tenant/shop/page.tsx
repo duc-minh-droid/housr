@@ -72,15 +72,15 @@ export default function ShopPage() {
   };
 
   if (isLoading) {
-    return <div className="text-gray-600">Loading...</div>;
+    return <div className="text-card-text/70">Loading...</div>;
   }
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Rewards Shop</h1>
-        <p className="text-gray-600 mt-1">Redeem your points for amazing rewards!</p>
+        <h1 className="text-3xl font-bold text-card-text">Rewards Marketplace</h1>
+        <p className="text-card-text/70 mt-1">Redeem your points for amazing rewards!</p>
       </div>
 
       {/* Alert */}
@@ -93,7 +93,7 @@ export default function ShopPage() {
       )}
 
       {/* Points Balance */}
-      <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+      <div className="bg-gradient-to-r from-primary to-primary-light rounded-lg p-6 text-white border border-primary-light/20">
         <p className="text-sm opacity-90">Your Points Balance</p>
         <p className="text-5xl font-bold mt-2">{points}</p>
         <p className="text-sm opacity-90 mt-2">
@@ -102,10 +102,10 @@ export default function ShopPage() {
       </div>
 
       {/* Shop Items */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Available Rewards</h2>
+      <div className="bg-card-bg rounded-lg border border-border p-6">
+        <h2 className="text-xl font-bold text-card-text mb-4">Available Rewards</h2>
         {shopItems.length === 0 ? (
-          <p className="text-gray-500">No items available at the moment</p>
+          <p className="text-card-text/70">No items available at the moment</p>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {shopItems.map((item) => {
@@ -114,28 +114,28 @@ export default function ShopPage() {
               return (
                 <div
                   key={item.id}
-                  className={`border-2 rounded-lg p-4 transition-all ${
+                  className={`border-2 rounded-lg p-4 transition-all bg-white/5 ${
                     canAfford
-                      ? 'border-blue-200 hover:border-blue-400 hover:shadow-md'
-                      : 'border-gray-200 opacity-60'
+                      ? 'border-primary/30 hover:border-primary hover:shadow-lg hover:shadow-primary/20'
+                      : 'border-border opacity-60'
                   }`}
                 >
                   {item.imageUrl && (
-                    <div className="w-full h-32 bg-gray-100 rounded-lg mb-3 flex items-center justify-center text-4xl">
+                    <div className="w-full h-32 bg-white/10 rounded-lg mb-3 flex items-center justify-center text-4xl">
                       {item.imageUrl}
                     </div>
                   )}
                   {!item.imageUrl && (
-                    <div className="w-full h-32 bg-gradient-to-br from-blue-400 to-blue-500 rounded-lg mb-3 flex items-center justify-center text-white text-5xl">
+                    <div className="w-full h-32 bg-gradient-to-br from-primary to-primary-light rounded-lg mb-3 flex items-center justify-center text-white text-5xl">
                       🎁
                     </div>
                   )}
                   
-                  <h3 className="font-bold text-gray-900 text-lg">{item.name}</h3>
-                  <p className="text-sm text-gray-600 mt-1 mb-3">{item.description}</p>
+                  <h3 className="font-bold text-card-text text-lg">{item.name}</h3>
+                  <p className="text-sm text-card-text/70 mt-1 mb-3">{item.description}</p>
                   
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl font-bold text-blue-600">
+                    <span className="text-2xl font-bold text-primary">
                       {item.pointCost} pts
                     </span>
                     <Button
@@ -154,24 +154,24 @@ export default function ShopPage() {
       </div>
 
       {/* Redemption History */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">Your Redemptions</h2>
+      <div className="bg-card-bg rounded-lg border border-border p-6">
+        <h2 className="text-xl font-bold text-card-text mb-4">Your Redemptions</h2>
         {redemptions.length === 0 ? (
-          <p className="text-gray-500">No redemptions yet</p>
+          <p className="text-card-text/70">No redemptions yet</p>
         ) : (
           <div className="space-y-3">
             {redemptions.map((redemption) => (
               <div
                 key={redemption.id}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+                className="flex items-center justify-between p-4 border border-border rounded-lg bg-white/5"
               >
                 <div>
-                  <p className="font-medium text-gray-900">{redemption.itemName}</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="font-medium text-card-text">{redemption.itemName}</p>
+                  <p className="text-sm text-card-text/70">
                     {new Date(redemption.date).toLocaleDateString()}
                   </p>
                 </div>
-                <span className="text-lg font-bold text-blue-600">
+                <span className="text-lg font-bold text-primary">
                   -{redemption.pointsSpent} pts
                 </span>
               </div>
@@ -195,15 +195,15 @@ export default function ShopPage() {
           <div className="space-y-4">
             <div className="text-center">
               <div className="text-6xl mb-4">🎁</div>
-              <h3 className="text-xl font-bold text-gray-900">{selectedItem.name}</h3>
-              <p className="text-gray-600 mt-2">{selectedItem.description}</p>
+              <h3 className="text-xl font-bold text-card-text">{selectedItem.name}</h3>
+              <p className="text-card-text/70 mt-2">{selectedItem.description}</p>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
-              <p className="text-sm text-gray-600">Cost</p>
-              <p className="text-3xl font-bold text-blue-600">{selectedItem.pointCost} points</p>
-              <p className="text-sm text-gray-600 mt-2">
-                You will have <strong>{points - selectedItem.pointCost}</strong> points remaining
+            <div className="bg-primary/10 border border-primary/30 rounded-lg p-4 text-center">
+              <p className="text-sm text-card-text/70">Cost</p>
+              <p className="text-3xl font-bold text-primary">{selectedItem.pointCost} points</p>
+              <p className="text-sm text-card-text/70 mt-2">
+                You will have <strong className="text-card-text">{points - selectedItem.pointCost}</strong> points remaining
               </p>
             </div>
 

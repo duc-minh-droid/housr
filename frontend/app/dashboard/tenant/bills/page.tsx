@@ -57,8 +57,8 @@ export default function TenantBillsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900">Bills</h1>
-        <p className="text-gray-600 mt-1">View and pay your bills</p>
+        <h1 className="text-3xl font-bold text-card-text">Bills</h1>
+        <p className="text-card-text/70 mt-1">View and pay your bills</p>
       </div>
 
       {/* Alert */}
@@ -71,12 +71,12 @@ export default function TenantBillsPage() {
       )}
 
       {/* Unpaid Bills */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">
+      <div className="bg-card-bg rounded-lg border border-border p-6">
+        <h2 className="text-xl font-bold text-card-text mb-4">
           Unpaid Bills ({unpaidBills.length})
         </h2>
         {unpaidBills.length === 0 ? (
-          <p className="text-gray-500">No unpaid bills 🎉</p>
+          <p className="text-card-text/70">No unpaid bills 🎉</p>
         ) : (
           <div className="space-y-4">
             {unpaidBills.map((bill) => (
@@ -84,31 +84,31 @@ export default function TenantBillsPage() {
                 key={bill.id}
                 className={`p-4 border-2 rounded-lg ${
                   isPastDue(bill.dueDate)
-                    ? 'border-red-200 bg-red-50'
-                    : 'border-yellow-200 bg-yellow-50'
+                    ? 'border-red-500/30 bg-red-500/10'
+                    : 'border-yellow-500/30 bg-yellow-500/10'
                 }`}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-bold text-gray-900">{bill.description}</h3>
+                      <h3 className="font-bold text-card-text">{bill.description}</h3>
                       <span
                         className={`text-xs px-2 py-1 rounded ${
                           isPastDue(bill.dueDate)
-                            ? 'bg-red-100 text-red-800'
-                            : 'bg-yellow-100 text-yellow-800'
+                            ? 'bg-red-500/20 text-red-400'
+                            : 'bg-yellow-500/20 text-yellow-400'
                         }`}
                       >
                         {isPastDue(bill.dueDate) ? 'Overdue' : 'Pending'}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-sm text-card-text/70 mt-1">
                       Type: {bill.type.charAt(0).toUpperCase() + bill.type.slice(1)}
                     </p>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-sm text-card-text/70">
                       Due Date: {formatDate(bill.dueDate)}
                     </p>
-                    <p className="text-2xl font-bold text-gray-900 mt-2">
+                    <p className="text-2xl font-bold text-card-text mt-2">
                       {formatCurrency(bill.amount)}
                     </p>
                   </div>
@@ -127,31 +127,31 @@ export default function TenantBillsPage() {
       </div>
 
       {/* Paid Bills */}
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
-        <h2 className="text-xl font-bold text-gray-900 mb-4">
+      <div className="bg-card-bg rounded-lg border border-border p-6">
+        <h2 className="text-xl font-bold text-card-text mb-4">
           Payment History ({paidBills.length})
         </h2>
         {paidBills.length === 0 ? (
-          <p className="text-gray-500">No payment history yet</p>
+          <p className="text-card-text/70">No payment history yet</p>
         ) : (
           <div className="space-y-3">
             {paidBills.map((bill) => (
               <div
                 key={bill.id}
-                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+                className="flex items-center justify-between p-4 border border-border rounded-lg bg-white/5"
               >
                 <div>
-                  <p className="font-medium text-gray-900">{bill.description}</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="font-medium text-card-text">{bill.description}</p>
+                  <p className="text-sm text-card-text/70">
                     Paid on: {formatDate(bill.paidDate)}
                   </p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-card-text/70">
                     Due: {formatDate(bill.dueDate)}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="font-bold text-gray-900">{formatCurrency(bill.amount)}</p>
-                  <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded">
+                  <p className="font-bold text-card-text">{formatCurrency(bill.amount)}</p>
+                  <span className="text-xs px-2 py-1 bg-green-500/20 text-green-400 rounded">
                     Paid
                   </span>
                 </div>
