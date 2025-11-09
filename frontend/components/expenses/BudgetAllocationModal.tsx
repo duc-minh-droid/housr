@@ -67,14 +67,26 @@ export function BudgetAllocationModal({
 
   const handlePercentageChange = (category: string, newPercentage: number) => {
     setError(null);
-    const clampedPercentage = Math.max(0, Math.min(100, newPercentage));
+    
+    // Get current allocation for this category
+    const currentAllocation = allocations.find(a => a.category === category);
+    if (!currentAllocation) return;
+    
+    // Calculate what the new total would be
+    const otherAllocationsTotal = allocations
+      .filter(a => a.category !== category)
+      .reduce((sum, a) => sum + a.percentage, 0);
+    
+    // Prevent exceeding 100% - cap at remaining available percentage
+    const maxAllowed = 100 - otherAllocationsTotal;
+    const clampedPercentage = Math.max(0, Math.min(maxAllowed, newPercentage));
     
     setAllocations((prev) =>
       prev.map((a) =>
         a.category === category
           ? {
               ...a,
-              percentage: clampedPercentage,
+              percentage: parseFloat(clampedPercentage.toFixed(1)),
               amount: (totalBudget * clampedPercentage) / 100,
             }
           : a
@@ -122,25 +134,26 @@ export function BudgetAllocationModal({
     <Modal isOpen={isOpen} onClose={onClose} title="Allocate Budget by Category">
       <div className="space-y-6">
         {/* Summary */}
-        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-xl p-4 border border-emerald-200 dark:border-emerald-800">
+        <div className="bg-gradient-to-br from-[#2a5335]/10 to-[#2a5335]/20 dark:from-[#2a5335]/20 dark:to-[#2a5335]/10 rounded-xl p-4 border border-[#2a5335]/30">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">
+            <span className="text-sm font-semibold" style={{ color: '#2a5335' }}>
               Total Budget
             </span>
-            <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
+            <span className="text-2xl font-bold" style={{ color: '#2a5335' }}>
               {formatCurrency(totalBudget)}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-emerald-700 dark:text-emerald-300">
+            <span className="text-sm" style={{ color: '#2a5335' }}>
               Allocated
             </span>
             <span
               className={`text-lg font-bold ${
                 isValid
-                  ? 'text-emerald-600 dark:text-emerald-400'
+                  ? ''
                   : 'text-red-600 dark:text-red-400'
               }`}
+              style={isValid ? { color: '#2a5335' } : undefined}
             >
               {totalPercentage.toFixed(1)}%
             </span>
@@ -182,16 +195,22 @@ export function BudgetAllocationModal({
         )}
 
         {/* Category Sliders */}
-        <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
+        <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
           {allocations.map((allocation) => {
             const colorClass = CATEGORY_COLORS[allocation.category] || CATEGORY_COLORS.Other;
+            
+            // Calculate max allowed for this category (100% - sum of others)
+            const otherAllocationsTotal = allocations
+              .filter(a => a.category !== allocation.category)
+              .reduce((sum, a) => sum + a.percentage, 0);
+            const maxAllowed = 100 - otherAllocationsTotal;
             
             return (
               <motion.div
                 key={allocation.category}
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="space-y-2"
+                className="space-y-1.5"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -201,36 +220,36 @@ export function BudgetAllocationModal({
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400 min-w-[4rem] text-right">
+                    <span className="text-sm font-semibold min-w-[4rem] text-right" style={{ color: '#2a5335' }}>
                       {formatCurrency(allocation.amount)}
                     </span>
                     <input
                       type="number"
                       min="0"
-                      max="100"
+                      max={maxAllowed}
                       step="0.1"
                       value={allocation.percentage}
                       onChange={(e) =>
                         handlePercentageChange(allocation.category, parseFloat(e.target.value) || 0)
                       }
-                      className="w-16 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-emerald-500"
+                      className="w-16 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#2a5335]"
                     />
                     <span className="text-sm text-gray-600 dark:text-gray-400">%</span>
                   </div>
                 </div>
-                <div className="relative">
+                <div className="relative h-1.5">
                   <input
                     type="range"
                     min="0"
-                    max="100"
+                    max={maxAllowed}
                     step="0.1"
                     value={allocation.percentage}
                     onChange={(e) =>
                       handlePercentageChange(allocation.category, parseFloat(e.target.value))
                     }
-                    className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gray-200 dark:bg-gray-700"
+                    className="w-full h-1.5 rounded-lg appearance-none cursor-pointer bg-gray-200 dark:bg-gray-700"
                     style={{
-                      background: `linear-gradient(to right, rgb(16, 185, 129) ${allocation.percentage}%, rgb(229, 231, 235) ${allocation.percentage}%)`,
+                      background: `linear-gradient(to right, #2a5335 ${(allocation.percentage / maxAllowed) * 100}%, rgb(229, 231, 235) ${(allocation.percentage / maxAllowed) * 100}%)`,
                     }}
                   />
                 </div>
@@ -241,12 +260,12 @@ export function BudgetAllocationModal({
 
         {/* Actions */}
         <div className="flex gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-          <Button
+          <button
             type="button"
-            variant="primary"
-            fullWidth
             onClick={handleSave}
             disabled={isSaving || !isValid}
+            className="flex-1 px-5 py-3 text-base font-semibold text-white rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            style={{ backgroundColor: '#2a5335' }}
           >
             {isSaving ? (
               <>
@@ -264,7 +283,7 @@ export function BudgetAllocationModal({
                 Save Allocation
               </>
             )}
-          </Button>
+          </button>
           <Button type="button" variant="secondary" fullWidth onClick={onClose}>
             Cancel
           </Button>
