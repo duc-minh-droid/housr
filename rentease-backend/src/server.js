@@ -9,6 +9,7 @@ import rentPlanRoutes from './routes/rentPlanRoutes.js';
 import rewardRoutes from './routes/rewardRoutes.js';
 import shopRoutes from './routes/shopRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import aiRoutes from './routes/aiRoutes.js';
 import { errorHandler } from './utils/errorHandler.js';
 
 dotenv.config();
@@ -36,6 +37,7 @@ app.use('/api/rewards', rewardRoutes);
 app.use('/api/shop', shopRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/ai', aiRoutes);
 
 app.use((req, res) => {
     res.status(404).json({ error: 'Not found' });

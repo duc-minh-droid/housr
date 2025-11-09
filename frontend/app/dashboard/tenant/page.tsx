@@ -7,7 +7,8 @@ import { DashboardCard, Alert, Badge } from '@/components/UIComponents';
 import { LoadingPage, SkeletonCard } from '@/components/LoadingSpinner';
 import { billsApi, expensesApi, rentPlansApi, rewardsApi } from '@/lib/api';
 import { formatCurrency, formatDate, isPastDue } from '@/lib/utils';
-import { Receipt, Wallet, Home, Gift, AlertCircle, CheckCircle, Clock, ArrowRight, TrendingUp, Calendar } from 'lucide-react';
+import { Receipt, Wallet, Home, Gift, AlertCircle, CheckCircle, Clock, ArrowRight, TrendingUp, Calendar, Sparkles, MessageCircle } from 'lucide-react';
+import Link from 'next/link';
 
 export default function TenantDashboard() {
   const { user } = useAuth();
@@ -135,6 +136,77 @@ export default function TenantDashboard() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* AI Feature Announcement */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.2 }}
+      >
+        <Link href="/dashboard/tenant/ai-chat">
+          <motion.div
+            whileHover={{ scale: 1.02, y: -4 }}
+            whileTap={{ scale: 0.98 }}
+            className="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all cursor-pointer relative overflow-hidden"
+          >
+            {/* Animated background effect */}
+            <motion.div
+              animate={{
+                opacity: [0.3, 0.6, 0.3],
+                scale: [1, 1.2, 1],
+              }}
+              transition={{
+                duration: 4,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+              className="absolute inset-0 bg-gradient-to-r from-purple-400 to-blue-400 blur-3xl"
+            />
+            
+            <div className="relative z-10 flex items-center gap-4">
+              <div className="shrink-0">
+                <motion.div
+                  animate={{
+                    rotate: [0, 10, -10, 0],
+                    scale: [1, 1.1, 1],
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: "easeInOut"
+                  }}
+                  className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center"
+                >
+                  <Sparkles className="w-8 h-8 text-white" />
+                </motion.div>
+              </div>
+              
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-xl font-bold text-white">NEW: AI Financial Assistant</h3>
+                  <span className="px-2 py-0.5 bg-yellow-400 text-yellow-900 text-xs font-bold rounded-full">
+                    BETA
+                  </span>
+                </div>
+                <p className="text-blue-50 text-sm">
+                  Get personalized insights about your expenses and financial habits. Chat with our AI assistant powered by Gemini 2.5 Flash!
+                </p>
+              </div>
+              
+              <div className="shrink-0 hidden sm:block">
+                <motion.div
+                  whileHover={{ x: 5 }}
+                  className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-xl text-white font-medium"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                  Try Now
+                  <ArrowRight className="w-5 h-5" />
+                </motion.div>
+              </div>
+            </div>
+          </motion.div>
+        </Link>
+      </motion.div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">

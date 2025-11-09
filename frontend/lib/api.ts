@@ -457,3 +457,53 @@ export const dashboardApi = {
     return data;
   },
 };
+
+// AI Chat API
+export const aiChatApi = {
+  // Create a new conversation
+  createConversation: async (title?: string) => {
+    const data = await fetchWithAuth('/api/ai/conversations', {
+      method: 'POST',
+      body: JSON.stringify({ title: title || 'New Conversation' }),
+    });
+    return data.conversation || data;
+  },
+  
+  // Get all conversations for the user
+  getConversations: async () => {
+    const data = await fetchWithAuth('/api/ai/conversations');
+    return data.conversations || data;
+  },
+  
+  // Get a specific conversation with all messages
+  getConversation: async (conversationId: string) => {
+    const data = await fetchWithAuth(`/api/ai/conversations/${conversationId}`);
+    return data.conversation || data;
+  },
+  
+  // Send a message in a conversation
+  sendMessage: async (conversationId: string, message: string) => {
+    const data = await fetchWithAuth(`/api/ai/conversations/${conversationId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify({ message }),
+    });
+    return data;
+  },
+  
+  // Update conversation title
+  updateConversation: async (conversationId: string, title: string) => {
+    const data = await fetchWithAuth(`/api/ai/conversations/${conversationId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ title }),
+    });
+    return data.conversation || data;
+  },
+  
+  // Delete a conversation
+  deleteConversation: async (conversationId: string) => {
+    const data = await fetchWithAuth(`/api/ai/conversations/${conversationId}`, {
+      method: 'DELETE',
+    });
+    return data;
+  },
+};
