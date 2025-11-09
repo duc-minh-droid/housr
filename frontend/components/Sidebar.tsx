@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -18,7 +19,9 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
-  MessageCircle
+  MessageCircle,
+  Sun,
+  Moon
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
@@ -31,6 +34,7 @@ export function Sidebar({ role }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
   const { logout, user } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   const handleLogout = () => {
@@ -87,7 +91,7 @@ export function Sidebar({ role }: SidebarProps) {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute -right-3 top-6 w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-emerald-700 transition-colors z-10"
+          className="absolute -right-3 top-6 w-6 h-6 bg-primary text-white rounded-full flex items-center justify-center shadow-lg hover:bg-primary-hover transition-colors z-10"
         >
           {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </motion.button>
@@ -100,7 +104,7 @@ export function Sidebar({ role }: SidebarProps) {
             transition={{ delay: 0.2, type: "spring" }}
             className="flex items-center gap-3"
           >
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-emerald-500/30">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-primary-light flex items-center justify-center flex-shrink-0 shadow-lg shadow-primary/30">
               <Sparkles className="w-6 h-6 text-white" />
             </div>
             <AnimatePresence>
@@ -111,9 +115,9 @@ export function Sidebar({ role }: SidebarProps) {
                   exit={{ opacity: 0, width: 0 }}
                   transition={{ duration: 0.2 }}
                 >
-                  <h1 className="text-xl font-bold text-gray-900 dark:text-white whitespace-nowrap">RentEase</h1>
+                  <h1 className="text-xl font-bold text-gray-900 dark:text-white whitespace-nowrap">Financr</h1>
                   <p className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">
-                    {role === 'tenant' ? 'Tenant Portal' : 'Landlord Portal'}
+                    {role === 'tenant' ? 'Personal Finance' : 'Management'}
                   </p>
                 </motion.div>
               )}
@@ -138,8 +142,8 @@ export function Sidebar({ role }: SidebarProps) {
                   className={cn(
                     'flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all cursor-pointer group',
                     isActive
-                      ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-lg shadow-emerald-600/30'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20',
+                      ? 'bg-gradient-to-r from-primary to-primary-light text-white shadow-lg shadow-primary/30'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-primary/5 dark:hover:bg-primary/10',
                     isCollapsed && 'justify-center'
                   )}
                   title={isCollapsed ? link.label : undefined}
@@ -182,6 +186,33 @@ export function Sidebar({ role }: SidebarProps) {
 
         {/* User info and logout - Fixed at bottom */}
         <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+          {/* Theme Toggle */}
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={toggleTheme}
+            className={cn(
+              "w-full mb-3 px-4 py-2.5 text-sm font-medium rounded-xl transition-all flex items-center gap-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600",
+              isCollapsed ? "justify-center" : "justify-center"
+            )}
+            title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+          >
+            {theme === 'light' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+            <AnimatePresence>
+              {!isCollapsed && (
+                <motion.span
+                  initial={{ opacity: 0, width: 0 }}
+                  animate={{ opacity: 1, width: 'auto' }}
+                  exit={{ opacity: 0, width: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="whitespace-nowrap"
+                >
+                  {theme === 'light' ? 'Dark' : 'Light'}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.button>
+
           <AnimatePresence>
             {!isCollapsed && (
               <motion.div 
@@ -201,9 +232,9 @@ export function Sidebar({ role }: SidebarProps) {
                   >
                     <div>
                       <p className="text-xs text-gray-600 dark:text-gray-400">Reward Points</p>
-                      <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{user.points || 0}</p>
+                      <p className="text-xl font-bold text-primary dark:text-primary-light">{user.points || 0}</p>
                     </div>
-                    <Gift className="w-8 h-8 text-emerald-600 dark:text-emerald-400 opacity-20" />
+                    <Gift className="w-8 h-8 text-primary dark:text-primary-light opacity-20" />
                   </motion.div>
                 )}
               </motion.div>

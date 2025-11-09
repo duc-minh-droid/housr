@@ -1,30 +1,41 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --card-bg: #ffffff;
-  --border: #e2e8f0;
-  --primary: #10b981;
-  --primary-hover: #059669;
+  --background: #F8FAF9;
+  --foreground: #1E1E1E;
+  --card-bg: #FFFFFF;
+  --border: #E5EAE8;
+  --primary: #204E3A;
+  --primary-hover: #2a6449;
+  --primary-light: #3B6B4C;
+  --primary-dark: #163828;
+  --surface: #FFFFFF;
+  --text-light: #1E1E1E;
+  --text-dark: #E2E8E4;
+  --border-light: #E5EAE8;
+  --border-dark: #1E2520;
+}
+
+.dark {
+  --background: #0C0F0E;
+  --foreground: #E2E8E4;
+  --card-bg: #121714;
+  --border: #1E2520;
+  --primary-hover: #3B6B4C;
+  --surface: #121714;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-light: var(--primary-light);
+  --color-primary-dark: var(--primary-dark);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0f0d;
-    --foreground: #f1f5f9;
-    --card-bg: #1a2520;
-    --border: #2d4a3e;
-    --primary: #10b981;
-    --primary-hover: #34d399;
-  }
 }
 
 * {
@@ -58,12 +69,12 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #10b981;
+  background: #204E3A;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #059669;
+  background: #2a6449;
 }
 
 /* Improved touch interactions */
