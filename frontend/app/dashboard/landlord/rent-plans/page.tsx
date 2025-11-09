@@ -2,28 +2,19 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button, Alert, Modal } from '@/components/UIComponents';
-import { rentPlansApi, usersApi } from '@/lib/api';
+import { Button, Alert } from '@/components/UIComponents';
+import { CreateRentPlanModal } from '@/components/CreateRentPlanModal';
+import { rentPlansApi } from '@/lib/api';
 import { formatCurrency, formatDate, getStatusColor } from '@/lib/utils';
 import { Plus, X, FileText, Calendar, DollarSign, Clock } from 'lucide-react';
 
 export default function LandlordRentPlansPage() {
   const { user } = useAuth();
   const [rentPlans, setRentPlans] = useState<any[]>([]);
-  const [tenants, setTenants] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [alert, setAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [processingPlanId, setProcessingPlanId] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  
-  // Form state
-  const [selectedTenant, setSelectedTenant] = useState('');
-  const [monthlyRent, setMonthlyRent] = useState('');
-  const [deposit, setDeposit] = useState('');
-  const [duration, setDuration] = useState('');
-  const [description, setDescription] = useState('');
-  const [startDate, setStartDate] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -34,12 +25,8 @@ export default function LandlordRentPlansPage() {
     
     try {
       setIsLoading(true);
-      const [plansData, tenantsData] = await Promise.all([
-        rentPlansApi.getLandlordPlans(),
-        usersApi.getTenants(),
-      ]);
+      const plansData = await rentPlansApi.getLandlordPlans();
       setRentPlans(plansData as any[]);
-      setTenants(tenantsData as any[]);
     } catch (error) {
       console.error('Error loading data:', error);
     } finally {
@@ -47,36 +34,12 @@ export default function LandlordRentPlansPage() {
     }
   };
 
-  const handleCreatePlan = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setAlert(null);
-
-    try {
-      await rentPlansApi.createPlan({
-        tenantId: selectedTenant,
-        monthlyRent: parseFloat(monthlyRent),
-        deposit: parseFloat(deposit),
-        duration: parseInt(duration),
-        description: description || undefined,
-        startDate: startDate || undefined,
-      });
-
-      setAlert({
-        type: 'success',
-        message: 'Rent plan created and sent to tenant successfully!',
-      });
-      setIsCreateModalOpen(false);
-      resetForm();
-      loadData();
-    } catch (error: any) {
-      setAlert({
-        type: 'error',
-        message: error.message || 'Failed to create rent plan',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handlePlanCreated = () => {
+    setAlert({
+      type: 'success',
+      message: 'Rent plan created and sent to tenant successfully!',
+    });
+    loadData();
   };
 
   const handleCancelPlan = async (planId: string) => {
@@ -102,14 +65,6 @@ export default function LandlordRentPlansPage() {
     }
   };
 
-  const resetForm = () => {
-    setSelectedTenant('');
-    setMonthlyRent('');
-    setDeposit('');
-    setDuration('');
-    setDescription('');
-    setStartDate('');
-  };
 
   if (isLoading) {
     return (
@@ -267,129 +222,12 @@ export default function LandlordRentPlansPage() {
         )}
       </div>
 
-      {/* Create Rent Plan Modal */}
-      <Modal
+      {/* Create Rent Plan Modal with Username Search */}
+      <CreateRentPlanModal
         isOpen={isCreateModalOpen}
-        onClose={() => {
-          setIsCreateModalOpen(false);
-          resetForm();
-        }}
-        title="Create New Rent Plan"
-      >
-        <form onSubmit={handleCreatePlan} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Select Tenant *
-            </label>
-            <select
-              value={selectedTenant}
-              onChange={(e) => setSelectedTenant(e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white"
-            >
-              <option value="">Choose a tenant...</option>
-              {tenants.map((tenant) => (
-                <option key={tenant.id} value={tenant.id}>
-                  {tenant.name} ({tenant.email})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Monthly Rent ($) *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={monthlyRent}
-                onChange={(e) => setMonthlyRent(e.target.value)}
-                required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white"
-                placeholder="0.00"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Deposit ($) *
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={deposit}
-                onChange={(e) => setDeposit(e.target.value)}
-                required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white"
-                placeholder="0.00"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Duration (months) *
-              </label>
-              <input
-                type="number"
-                min="1"
-                value={duration}
-                onChange={(e) => setDuration(e.target.value)}
-                required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white"
-                placeholder="12"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Start Date
-              </label>
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Description (Optional)
-            </label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white"
-              placeholder="Add any additional notes about this rental agreement..."
-            />
-          </div>
-
-          <div className="flex gap-3 pt-4">
-            <Button type="submit" variant="primary" fullWidth disabled={isSubmitting}>
-              {isSubmitting ? 'Creating...' : 'Create & Send to Tenant'}
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              fullWidth
-              onClick={() => {
-                setIsCreateModalOpen(false);
-                resetForm();
-              }}
-            >
-              Cancel
-            </Button>
-          </div>
-        </form>
-      </Modal>
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={handlePlanCreated}
+      />
     </div>
   );
 }
