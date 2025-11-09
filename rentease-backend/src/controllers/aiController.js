@@ -109,8 +109,8 @@ export const analyzeUserFinances = asyncHandler(async (req, res) => {
     const prompt = `Please analyze the tenant's financial data (expenses, bills, rent plan) and in one short paragraph provide: a brief analysis of their spending, practical tips to improve their finances, and one clear recommendation. Data: ${JSON.stringify(userData, null, 2)}`;
 
     try {
-        // Call Gemini AI - using gemini-2.5-flash (free tier model)
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
+        // Call Gemini AI - using gemini-1.5-flash (free tier model)
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const analysis = response.text();
@@ -350,7 +350,7 @@ Respond helpfully and naturally. If they ask about their expenses, reference the
 
     try {
         // Call Gemini AI
-        const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
         const result = await model.generateContent(systemPrompt);
         const response = await result.response;
         const aiResponse = response.text();
