@@ -15,6 +15,18 @@ export default function TenantBillsPage() {
 
   useEffect(() => {
     loadBills();
+    
+    // Check for payment success/cancellation from URL params
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === 'true') {
+      setAlert({ type: 'success', message: 'Payment successful! Points have been added to your account.' });
+      // Clean URL
+      window.history.replaceState({}, '', '/dashboard/tenant/bills');
+    } else if (urlParams.get('cancelled') === 'true') {
+      setAlert({ type: 'error', message: 'Payment was cancelled.' });
+      // Clean URL
+      window.history.replaceState({}, '', '/dashboard/tenant/bills');
+    }
   }, [user]);
 
   const loadBills = async () => {
@@ -36,12 +48,17 @@ export default function TenantBillsPage() {
     setAlert(null);
     
     try {
-      await billsApi.payBill(billId);
-      setAlert({ type: 'success', message: 'Payment successful! Points have been added to your account.' });
-      loadBills(); // Reload bills
+      const response = await billsApi.payBill(billId);
+      
+      // Redirect to Stripe Checkout
+      if (response.sessionUrl) {
+        window.location.href = response.sessionUrl;
+      } else {
+        setAlert({ type: 'error', message: 'Payment session could not be created.' });
+        setPayingBillId(null);
+      }
     } catch (error: any) {
       setAlert({ type: 'error', message: error.message || 'Payment failed. Please try again.' });
-    } finally {
       setPayingBillId(null);
     }
   };

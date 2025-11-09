@@ -1,5 +1,8 @@
 import prisma from '../config/db.js';
 import { asyncHandler } from '../utils/errorHandler.js';
+import Stripe from 'stripe';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 const buildBillInclude = {
     tenant: {
@@ -92,7 +95,14 @@ export const payBill = asyncHandler(async (req, res) => {
     }
 
     const { billId } = req.params;
-    const bill = await prisma.bill.findUnique({ where: { id: billId } });
+    const bill = await prisma.bill.findUnique({ 
+        where: { id: billId },
+        include: {
+            landlord: {
+                select: { name: true }
+            }
+        }
+    });
 
     if (!bill || bill.tenantId !== req.user.id) {
         const error = new Error('Bill not found');
@@ -106,55 +116,42 @@ export const payBill = asyncHandler(async (req, res) => {
         throw error;
     }
 
-    const paidDate = new Date();
-    const isOnTime = paidDate <= bill.dueDate;
-    const pointsEarned = isOnTime ? Math.max(0, Math.round(bill.amount * 0.1)) : 0;
-
-    const operations = [
-        prisma.bill.update({
-            where: { id: billId },
-            data: {
-                isPaid: true,
-                paidDate,
-            },
-        }),
-    ];
-
-    if (pointsEarned > 0) {
-        operations.push(
-            prisma.reward.create({
-                data: {
-                    tenantId: req.user.id,
-                    billId: bill.id,
-                    amount: bill.amount,
-                    date: paidDate,
-                    isOnTime,
-                    pointsEarned,
-                },
-            }),
-            prisma.user.update({
-                where: { id: req.user.id },
-                data: {
-                    points: {
-                        increment: pointsEarned,
+    // Create Stripe Checkout Session
+    const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        mode: 'payment',
+        line_items: [
+            {
+                price_data: {
+                    currency: 'usd',
+                    unit_amount: Math.round(bill.amount * 100), // Convert to cents
+                    product_data: {
+                        name: `${bill.type.charAt(0).toUpperCase() + bill.type.slice(1)} Bill`,
+                        description: `${bill.description || 'Payment to ' + bill.landlord.name}`,
                     },
                 },
-            }),
-        );
-    }
+                quantity: 1,
+            },
+        ],
+        metadata: {
+            billId: bill.id,
+            tenantId: req.user.id,
+            landlordId: bill.landlordId,
+        },
+        success_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/tenant/bills?success=true&billId=${bill.id}`,
+        cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/tenant/bills?cancelled=true`,
+    });
 
-    const results = await prisma.$transaction(operations);
-    const updatedBill = results[0];
+    // Store session ID with bill for tracking
+    await prisma.bill.update({
+        where: { id: billId },
+        data: {
+            stripeSessionId: session.id,
+        },
+    });
 
-    const updatedUser = pointsEarned > 0 ? results[results.length - 1] : req.user;
-
-    if (pointsEarned > 0) {
-        req.user.points = updatedUser.points;
-    }
-
-    res.json({
-        bill: updatedBill,
-        reward: pointsEarned > 0 ? results[1] : null,
-        pointsBalance: updatedUser.points,
+    res.json({ 
+        sessionUrl: session.url,
+        sessionId: session.id,
     });
 });

@@ -279,9 +279,11 @@ export const handleStripeWebhook = asyncHandler(async (req, res) => {
     if (event.type === 'checkout.session.completed') {
         const session = event.data.object;
 
-        // Get the rent plan ID from metadata
+        // Get IDs from metadata
         const rentPlanId = session.metadata.rentPlanId;
+        const billId = session.metadata.billId;
 
+        // Handle rent plan payment
         if (rentPlanId) {
             try {
                 // Get the rent plan with tenant and landlord info
@@ -322,6 +324,61 @@ export const handleStripeWebhook = asyncHandler(async (req, res) => {
                 }
             } catch (error) {
                 console.error(`Error updating rent plan ${rentPlanId}:`, error);
+            }
+        }
+
+        // Handle bill payment
+        if (billId) {
+            try {
+                const bill = await prisma.bill.findUnique({
+                    where: { id: billId },
+                    include: { tenant: true },
+                });
+
+                if (bill) {
+                    const paidDate = new Date();
+                    const isOnTime = paidDate <= bill.dueDate;
+                    const pointsEarned = isOnTime ? Math.max(0, Math.round(bill.amount * 0.1)) : 0;
+
+                    const operations = [
+                        prisma.bill.update({
+                            where: { id: billId },
+                            data: {
+                                isPaid: true,
+                                paidDate,
+                            },
+                        }),
+                    ];
+
+                    if (pointsEarned > 0) {
+                        operations.push(
+                            prisma.reward.create({
+                                data: {
+                                    tenantId: bill.tenantId,
+                                    billId: bill.id,
+                                    amount: bill.amount,
+                                    date: paidDate,
+                                    isOnTime,
+                                    pointsEarned,
+                                },
+                            }),
+                            prisma.user.update({
+                                where: { id: bill.tenantId },
+                                data: {
+                                    points: {
+                                        increment: pointsEarned,
+                                    },
+                                },
+                            }),
+                        );
+                    }
+
+                    await prisma.$transaction(operations);
+
+                    console.log(`✅ Bill ${billId} marked as paid. Points earned: ${pointsEarned}`);
+                }
+            } catch (error) {
+                console.error(`Error updating bill ${billId}:`, error);
             }
         }
     }
