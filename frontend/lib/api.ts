@@ -50,27 +50,74 @@ const fetchWithAuth = async (url: string, options: RequestInit = {}) => {
   }
   
   const fullUrl = `${API_BASE_URL}${url}`;
-  const response = await fetch(fullUrl, {
-    ...options,
-    headers: {
-      ...headers,
-      ...(options.headers as Record<string, string> || {}),
-    },
-  });
   
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Request failed' }));
-    const errorMessage = error.error || error.message || `Request failed: ${response.status} ${response.statusText}`;
-    console.error(`API Error [${options.method || 'GET'}] ${fullUrl}:`, errorMessage);
-    throw new Error(errorMessage);
+  try {
+    const response = await fetch(fullUrl, {
+      ...options,
+      headers: {
+        ...headers,
+        ...(options.headers as Record<string, string> || {}),
+      },
+    });
+    
+    if (!response.ok) {
+      // Try to get error message from response
+      let errorMessage = `Request failed: ${response.status} ${response.statusText}`;
+      
+      try {
+        // First try to get response as text
+        const responseText = await response.text();
+        
+        // Try to parse as JSON
+        if (responseText) {
+          try {
+            const error = JSON.parse(responseText);
+            errorMessage = error.error || error.message || errorMessage;
+          } catch {
+            // If not JSON, use the text itself if it's not HTML
+            if (!responseText.includes('<!DOCTYPE') && !responseText.includes('<html')) {
+              errorMessage = responseText.substring(0, 200); // Limit length
+            }
+          }
+        }
+      } catch (parseError) {
+        // If we can't read the response, use default message
+        console.warn('Could not parse error response:', parseError);
+      }
+      
+      console.error(`API Error [${options.method || 'GET'}] ${fullUrl}:`, errorMessage);
+      throw new Error(errorMessage);
+    }
+    
+    // Handle 204 No Content
+    if (response.status === 204) {
+      return {};
+    }
+    
+    // Try to parse response as JSON
+    const responseText = await response.text();
+    if (!responseText) {
+      return {};
+    }
+    
+    try {
+      return JSON.parse(responseText);
+    } catch (jsonError) {
+      console.error('Failed to parse JSON response:', responseText.substring(0, 100));
+      throw new Error('Invalid JSON response from server');
+    }
+  } catch (error) {
+    // Network errors or other fetch failures
+    if (error instanceof Error) {
+      // Check if it's a specific error type we want to handle gracefully
+      if (error.message.includes('AI') || error.message.includes('generate')) {
+        console.warn('AI service temporarily unavailable:', error.message);
+        throw new Error('AI service is temporarily unavailable. Please try again later.');
+      }
+      throw error;
+    }
+    throw new Error('Network request failed');
   }
-  
-  // Handle 204 No Content
-  if (response.status === 204) {
-    return {};
-  }
-  
-  return response.json();
 };
 
 // Auth API
