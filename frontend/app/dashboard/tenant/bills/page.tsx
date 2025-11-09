@@ -1,0 +1,165 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button, Alert } from '@/components/UIComponents';
+import { billsApi } from '@/lib/api';
+import { formatCurrency, formatDate, isPastDue } from '@/lib/utils';
+
+export default function TenantBillsPage() {
+  const { user } = useAuth();
+  const [bills, setBills] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [payingBillId, setPayingBillId] = useState<string | null>(null);
+  const [alert, setAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  useEffect(() => {
+    loadBills();
+  }, [user]);
+
+  const loadBills = async () => {
+    if (!user) return;
+    
+    try {
+      setIsLoading(true);
+      const data = await billsApi.getTenantBills() as any[];
+      setBills(data);
+    } catch (error) {
+      console.error('Error loading bills:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePayBill = async (billId: string) => {
+    setPayingBillId(billId);
+    setAlert(null);
+    
+    try {
+      await billsApi.payBill(billId);
+      setAlert({ type: 'success', message: 'Payment successful! Points have been added to your account.' });
+      loadBills(); // Reload bills
+    } catch (error: any) {
+      setAlert({ type: 'error', message: error.message || 'Payment failed. Please try again.' });
+    } finally {
+      setPayingBillId(null);
+    }
+  };
+
+  if (isLoading) {
+    return <div className="text-gray-600">Loading...</div>;
+  }
+
+  const unpaidBills = bills.filter((b) => !b.isPaid);
+  const paidBills = bills.filter((b) => b.isPaid);
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Bills</h1>
+        <p className="text-gray-600 mt-1">View and pay your bills</p>
+      </div>
+
+      {/* Alert */}
+      {alert && (
+        <Alert
+          type={alert.type}
+          message={alert.message}
+          onClose={() => setAlert(null)}
+        />
+      )}
+
+      {/* Unpaid Bills */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">
+          Unpaid Bills ({unpaidBills.length})
+        </h2>
+        {unpaidBills.length === 0 ? (
+          <p className="text-gray-500">No unpaid bills 🎉</p>
+        ) : (
+          <div className="space-y-4">
+            {unpaidBills.map((bill) => (
+              <div
+                key={bill.id}
+                className={`p-4 border-2 rounded-lg ${
+                  isPastDue(bill.dueDate)
+                    ? 'border-red-200 bg-red-50'
+                    : 'border-yellow-200 bg-yellow-50'
+                }`}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-bold text-gray-900">{bill.description}</h3>
+                      <span
+                        className={`text-xs px-2 py-1 rounded ${
+                          isPastDue(bill.dueDate)
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-yellow-100 text-yellow-800'
+                        }`}
+                      >
+                        {isPastDue(bill.dueDate) ? 'Overdue' : 'Pending'}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Type: {bill.type.charAt(0).toUpperCase() + bill.type.slice(1)}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Due Date: {formatDate(bill.dueDate)}
+                    </p>
+                    <p className="text-2xl font-bold text-gray-900 mt-2">
+                      {formatCurrency(bill.amount)}
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => handlePayBill(bill.id)}
+                    disabled={payingBillId === bill.id}
+                    variant="primary"
+                  >
+                    {payingBillId === bill.id ? 'Processing...' : 'Pay Now'}
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Paid Bills */}
+      <div className="bg-white rounded-lg border border-gray-200 p-6">
+        <h2 className="text-xl font-bold text-gray-900 mb-4">
+          Payment History ({paidBills.length})
+        </h2>
+        {paidBills.length === 0 ? (
+          <p className="text-gray-500">No payment history yet</p>
+        ) : (
+          <div className="space-y-3">
+            {paidBills.map((bill) => (
+              <div
+                key={bill.id}
+                className="flex items-center justify-between p-4 border border-gray-200 rounded-lg"
+              >
+                <div>
+                  <p className="font-medium text-gray-900">{bill.description}</p>
+                  <p className="text-sm text-gray-600">
+                    Paid on: {formatDate(bill.paidDate)}
+                  </p>
+                  <p className="text-sm text-gray-600">
+                    Due: {formatDate(bill.dueDate)}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-gray-900">{formatCurrency(bill.amount)}</p>
+                  <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded">
+                    Paid
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
