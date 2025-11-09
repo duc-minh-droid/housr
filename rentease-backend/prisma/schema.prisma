@@ -23,6 +23,7 @@ enum RentPlanStatus {
 model User {
     id            String                  @id @default(uuid())
     email         String                  @unique
+    username      String                  @unique
     password      String
     name          String
     role          Role
@@ -110,6 +111,7 @@ model RentPlan {
     status          RentPlanStatus @default(pending)
     proposedDate    DateTime       @default(now())
     reviewedDate    DateTime?
+    acceptedAt      DateTime?      // When tenant accepted (before payment)
     completedDate   DateTime?
     stripeSessionId String?        // Stripe Checkout Session ID
     paymentIntentId String?        // Stripe Payment Intent ID

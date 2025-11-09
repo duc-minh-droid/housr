@@ -2,6 +2,44 @@ import { asyncHandler } from '../utils/errorHandler.js';
 import { listTenantsForLandlord } from '../models/User.js';
 import prisma from '../config/db.js';
 
+// Search users by username (landlord only)
+export const searchUsers = asyncHandler(async (req, res) => {
+    if (req.user.role !== 'landlord') {
+        const error = new Error('Only landlords can search users');
+        error.status = 403;
+        throw error;
+    }
+
+    const { username } = req.query;
+
+    if (!username || username.trim().length < 2) {
+        return res.json({ users: [] });
+    }
+
+    // Search for tenants by username (case-insensitive partial match)
+    const users = await prisma.user.findMany({
+        where: {
+            username: {
+                contains: username.trim(),
+                mode: 'insensitive',
+            },
+            role: 'tenant',
+        },
+        select: {
+            id: true,
+            username: true,
+            email: true,
+            name: true,
+        },
+        take: 10,
+        orderBy: {
+            username: 'asc',
+        },
+    });
+
+    res.json({ users });
+});
+
 export const getTenants = asyncHandler(async (req, res) => {
     if (req.user.role !== 'landlord') {
         const error = new Error('Only landlords can view their tenants');

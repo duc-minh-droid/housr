@@ -1,10 +1,10 @@
 import express from 'express';
-import { authenticate } from '../middleware/auth.js';
-import { getTenants, getTenantDetails } from '../controllers/userController.js';
+import { searchUsers } from '../controllers/userController.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
-router.get('/tenants', authenticate, getTenants);
-router.get('/tenants/:tenantId', authenticate, getTenantDetails);
+// Search users by username (landlord only)
+router.get('/search', authenticateToken, searchUsers);
 
 export default router;

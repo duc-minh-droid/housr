@@ -32,11 +32,11 @@ export const createRentPlan = asyncHandler(async (req, res) => {
         throw error;
     }
 
-    const { tenantId, monthlyRent, deposit, duration, description, startDate } = req.body;
+    const { tenantId, tenantUsername, monthlyRent, deposit, duration, description, startDate } = req.body;
 
-    // Validation
-    if (!tenantId || !monthlyRent || !deposit || !duration) {
-        const error = new Error('Missing required fields: tenantId, monthlyRent, deposit, duration');
+    // Validation - accept either tenantId or tenantUsername
+    if ((!tenantId && !tenantUsername) || !monthlyRent || !deposit || !duration) {
+        const error = new Error('Missing required fields: (tenantId or tenantUsername), monthlyRent, deposit, duration');
         error.status = 400;
         throw error;
     }
@@ -51,13 +51,17 @@ export const createRentPlan = asyncHandler(async (req, res) => {
         throw error;
     }
 
-    // Verify tenant exists and is actually a tenant
+    // Find tenant by username or ID
+    const whereClause = tenantUsername 
+        ? { username: tenantUsername, role: 'tenant' }
+        : { id: tenantId, role: 'tenant' };
+
     const tenant = await prisma.user.findFirst({
-        where: { id: tenantId, role: 'tenant' },
+        where: whereClause,
     });
 
     if (!tenant) {
-        const error = new Error('Tenant not found');
+        const error = new Error(tenantUsername ? `Tenant with username "${tenantUsername}" not found` : 'Tenant not found');
         error.status = 404;
         throw error;
     }
@@ -65,7 +69,7 @@ export const createRentPlan = asyncHandler(async (req, res) => {
     // Create the rent plan
     const plan = await prisma.rentPlan.create({
         data: {
-            tenantId,
+            tenantId: tenant.id,
             landlordId: req.user.id,
             monthlyRent: monthlyRentValue,
             deposit: depositValue,
@@ -76,15 +80,39 @@ export const createRentPlan = asyncHandler(async (req, res) => {
         },
         include: {
             tenant: {
-                select: { id: true, name: true, email: true },
+                select: { id: true, name: true, email: true, username: true },
             },
             landlord: {
-                select: { id: true, name: true, email: true },
+                select: { id: true, name: true, email: true, username: true },
             },
         },
     });
 
     res.status(201).json({ plan });
+});
+
+// Get pending rent plans for current tenant
+export const getPendingPlans = asyncHandler(async (req, res) => {
+    if (req.user.role !== 'tenant') {
+        const error = new Error('Only tenants can view pending plans');
+        error.status = 403;
+        throw error;
+    }
+
+    const plans = await prisma.rentPlan.findMany({
+        where: {
+            tenantId: req.user.id,
+            status: 'pending',
+        },
+        include: {
+            landlord: {
+                select: { id: true, name: true, email: true, username: true },
+            },
+        },
+        orderBy: { proposedDate: 'desc' },
+    });
+
+    res.json({ plans });
 });
 
 // Tenant accepts a rent plan and initiates Stripe payment
@@ -156,6 +184,7 @@ export const acceptRentPlan = asyncHandler(async (req, res) => {
         data: {
             status: 'accepted',
             stripeSessionId: session.id,
+            acceptedAt: new Date(),
             reviewedDate: new Date(),
         },
     });

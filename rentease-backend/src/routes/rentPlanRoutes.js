@@ -2,6 +2,7 @@ import { Router } from 'express';
 import express from 'express';
 import {
     getRentPlans,
+    getPendingPlans,
     createRentPlan,
     acceptRentPlan,
     rejectRentPlan,
@@ -23,6 +24,7 @@ router.post(
 router.use(authenticate);
 
 router.get('/', getRentPlans);
+router.get('/pending', getPendingPlans);       // Tenant gets pending plans
 router.post('/', createRentPlan);              // Landlord creates plan
 router.post('/:planId/accept', acceptRentPlan); // Tenant accepts and pays
 router.post('/:planId/reject', rejectRentPlan); // Tenant rejects
