@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import express from 'express';
 import authRoutes from './routes/authRoutes.js';
 import billRoutes from './routes/billRoutes.js';
+import budgetRoutes from './routes/budgetRoutes.js';
 import dashboardRoutes from './routes/dashboardRoutes.js';
 import expenseRoutes from './routes/expenseRoutes.js';
 import rentPlanRoutes from './routes/rentPlanRoutes.js';
@@ -31,6 +32,7 @@ app.get('/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/bills', billRoutes);
+app.use('/api/budget', budgetRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/rent-plans', rentPlanRoutes);
 app.use('/api/rewards', rewardRoutes);

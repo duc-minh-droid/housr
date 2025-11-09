@@ -178,20 +178,63 @@ export const mockExpensesApi = {
     return { success: true };
   },
   
-  getSummary: async (month?: number, year?: number) => {
+  getSummary: async (period: 'week' | 'month' | 'all' = 'month', month?: number, year?: number) => {
     await delay();
-    const expenses = await mockExpensesApi.getExpenses(month, year);
+    let expenses = await mockExpensesApi.getExpenses(month, year);
+    
+    // Filter by period
+    const now = new Date();
+    if (period === 'week') {
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      expenses = expenses.filter(e => new Date(e.date) >= weekAgo);
+    } else if (period === 'month') {
+      expenses = expenses.filter(e => {
+        const expDate = new Date(e.date);
+        return expDate.getMonth() === now.getMonth() && expDate.getFullYear() === now.getFullYear();
+      });
+    }
     
     const totalSpent = expenses.reduce((sum, exp) => sum + exp.amount, 0);
     const byCategory = expenses.reduce((acc, exp) => {
-      acc[exp.category] = (acc[exp.category] || 0) + exp.amount;
+      const existing = acc.find(c => c.category === exp.category);
+      if (existing) {
+        existing.total += exp.amount;
+        existing.count += 1;
+      } else {
+        acc.push({ category: exp.category, total: exp.amount, count: 1 });
+      }
       return acc;
-    }, {} as Record<string, number>);
+    }, [] as Array<{ category: string; total: number; count: number }>);
+    
+    // Generate timeseries
+    const timeseriesMap = new Map<string, number>();
+    expenses.forEach(exp => {
+      const date = new Date(exp.date);
+      const key = period === 'all'
+        ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+        : date.toISOString().split('T')[0];
+      timeseriesMap.set(key, (timeseriesMap.get(key) || 0) + exp.amount);
+    });
+    
+    // Sort and calculate cumulative totals
+    const sortedTimeseries = Array.from(timeseriesMap.entries())
+      .map(([date, total]) => ({ date, total }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+    
+    let cumulativeTotal = 0;
+    const timeseries = sortedTimeseries.map((item) => {
+      cumulativeTotal += item.total;
+      return {
+        date: item.date,
+        total: Number(cumulativeTotal.toFixed(2)),
+      };
+    });
     
     return {
-      total: totalSpent,
-      byCategory,
-      count: expenses.length,
+      totalSpent,
+      expensesByCategory: byCategory,
+      timeseries,
+      period,
     };
   },
 };
@@ -235,6 +278,52 @@ export const mockRentPlansApi = {
     plan.reviewedDate = new Date().toISOString();
     
     return plan;
+  },
+};
+
+// Mock Budget API
+const mockBudgets = new Map<string, { period: string; amount: number }>();
+
+export const mockBudgetApi = {
+  getBudget: async (period: 'week' | 'month' | 'all') => {
+    await delay();
+    const user = getCurrentMockUser();
+    if (!user) throw new Error('Not authenticated');
+    
+    const key = `${user.id}-${period}`;
+    const budget = mockBudgets.get(key);
+    
+    return {
+      budget: budget ? {
+        id: key,
+        tenantId: user.id,
+        period,
+        amount: budget.amount,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } : null,
+      period,
+    };
+  },
+  
+  updateBudget: async (period: 'week' | 'month' | 'all', amount: number) => {
+    await delay();
+    const user = getCurrentMockUser();
+    if (!user) throw new Error('Not authenticated');
+    
+    const key = `${user.id}-${period}`;
+    mockBudgets.set(key, { period, amount });
+    
+    return {
+      budget: {
+        id: key,
+        tenantId: user.id,
+        period,
+        amount,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    };
   },
 };
 

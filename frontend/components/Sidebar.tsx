@@ -87,7 +87,7 @@ export function Sidebar({ role }: SidebarProps) {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute -right-3 top-6 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-blue-700 transition-colors z-10"
+          className="absolute -right-3 top-6 w-6 h-6 bg-emerald-600 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-emerald-700 transition-colors z-10"
         >
           {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </motion.button>
@@ -100,7 +100,7 @@ export function Sidebar({ role }: SidebarProps) {
             transition={{ delay: 0.2, type: "spring" }}
             className="flex items-center gap-3"
           >
-            <div className="w-10 h-10 rounded-2xl bg-linear-to-br from-blue-600 to-blue-400 flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-500 flex items-center justify-center flex-shrink-0 shadow-lg shadow-emerald-500/30">
               <Sparkles className="w-6 h-6 text-white" />
             </div>
             <AnimatePresence>
@@ -138,8 +138,8 @@ export function Sidebar({ role }: SidebarProps) {
                   className={cn(
                     'flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all cursor-pointer group',
                     isActive
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700',
+                      ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-lg shadow-emerald-600/30'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20',
                     isCollapsed && 'justify-center'
                   )}
                   title={isCollapsed ? link.label : undefined}
@@ -201,9 +201,9 @@ export function Sidebar({ role }: SidebarProps) {
                   >
                     <div>
                       <p className="text-xs text-gray-600 dark:text-gray-400">Reward Points</p>
-                      <p className="text-xl font-bold text-blue-600 dark:text-blue-400">{user.points || 0}</p>
+                      <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{user.points || 0}</p>
                     </div>
-                    <Gift className="w-8 h-8 text-blue-600 dark:text-blue-400 opacity-20" />
+                    <Gift className="w-8 h-8 text-emerald-600 dark:text-emerald-400 opacity-20" />
                   </motion.div>
                 )}
               </motion.div>

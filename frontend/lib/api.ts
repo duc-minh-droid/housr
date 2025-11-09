@@ -10,6 +10,7 @@ import {
   mockRewardsApi,
   mockShopApi,
   mockDashboardApi,
+  mockBudgetApi,
 } from './mockApi';
 
 // Base URL for API - Port 5001 for RentEase Backend
@@ -188,24 +189,39 @@ export const billsApi = {
 
 // Expenses API
 export const expensesApi = {
-  getExpenses: async (month?: number, year?: number) => {
+  getExpenses: async (period: 'week' | 'month' | 'all' = 'month', month?: number, year?: number) => {
     // Use mock API for mock users
     if (isCurrentUserMock()) {
-      return mockExpensesApi.getExpenses(month, year);
+      // For mock API, filter expenses by period
+      let expenses = await mockExpensesApi.getExpenses(month, year);
+      const now = new Date();
+      
+      if (period === 'week') {
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        expenses = expenses.filter(e => new Date(e.date) >= weekAgo);
+      } else if (period === 'month' && !month && !year) {
+        expenses = expenses.filter(e => {
+          const expDate = new Date(e.date);
+          return expDate.getMonth() === now.getMonth() && expDate.getFullYear() === now.getFullYear();
+        });
+      }
+      
+      return expenses;
     }
     
     let url = '/api/expenses';
     const params = new URLSearchParams();
+    params.append('period', period);
     if (month) params.append('month', month.toString());
     if (year) params.append('year', year.toString());
-    if (params.toString()) url += `?${params.toString()}`;
+    url += `?${params.toString()}`;
     
     const data = await fetchWithAuth(url);
     return data.expenses || data;
   },
   
   getTenantExpenses: async (month?: number, year?: number) => {
-    return expensesApi.getExpenses(month, year);
+    return expensesApi.getExpenses('month', month, year);
   },
   
   createExpense: async (expenseData: {
@@ -238,19 +254,48 @@ export const expensesApi = {
     return { success: true };
   },
   
-  getSummary: async (month?: number, year?: number) => {
+  getSummary: async (period: 'week' | 'month' | 'all' = 'month', month?: number, year?: number) => {
     // Use mock API for mock users
     if (isCurrentUserMock()) {
-      return mockExpensesApi.getSummary(month, year);
+      return mockExpensesApi.getSummary(period, month, year);
     }
     
     let url = '/api/expenses/summary';
     const params = new URLSearchParams();
+    params.append('period', period);
     if (month) params.append('month', month.toString());
     if (year) params.append('year', year.toString());
-    if (params.toString()) url += `?${params.toString()}`;
+    url += `?${params.toString()}`;
     
     const data = await fetchWithAuth(url);
+    return data;
+  },
+};
+
+// Budget API
+export const budgetApi = {
+  getBudget: async (period: 'week' | 'month' | 'all' = 'month') => {
+    // Use mock API for mock users
+    if (isCurrentUserMock()) {
+      return mockBudgetApi.getBudget(period);
+    }
+    
+    const params = new URLSearchParams();
+    params.append('period', period);
+    const data = await fetchWithAuth(`/api/budget?${params.toString()}`);
+    return data;
+  },
+  
+  updateBudget: async (period: 'week' | 'month' | 'all', amount: number) => {
+    // Use mock API for mock users
+    if (isCurrentUserMock()) {
+      return mockBudgetApi.updateBudget(period, amount);
+    }
+    
+    const data = await fetchWithAuth('/api/budget', {
+      method: 'POST',
+      body: JSON.stringify({ period, amount }),
+    });
     return data;
   },
 };

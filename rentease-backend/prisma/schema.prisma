@@ -19,25 +19,26 @@ enum RentPlanStatus {
 }
 
 model User {
-    id            String         @id @default(uuid())
-    email         String         @unique
+    id            String                  @id @default(uuid())
+    email         String                  @unique
     password      String
     name          String
     role          Role
-    points        Int            @default(0)
+    points        Int                     @default(0)
     landlordId    String?
-    landlord      User?          @relation("LandlordTenant", fields: [landlordId], references: [id])
-    tenants       User[]         @relation("LandlordTenant")
-    bills         Bill[]         @relation("TenantBills")
-    managedBills  Bill[]         @relation("LandlordBills")
+    landlord      User?                   @relation("LandlordTenant", fields: [landlordId], references: [id])
+    tenants       User[]                  @relation("LandlordTenant")
+    bills         Bill[]                  @relation("TenantBills")
+    managedBills  Bill[]                  @relation("LandlordBills")
     expenses      Expense[]
-    rentPlans     RentPlan[]     @relation("TenantRentPlans")
-    managedPlans  RentPlan[]     @relation("LandlordRentPlans")
+    budgets       Budget[]
+    rentPlans     RentPlan[]              @relation("TenantRentPlans")
+    managedPlans  RentPlan[]              @relation("LandlordRentPlans")
     rewards       Reward[]
     redemptions   Redemption[]
     conversations Conversation[]
-    createdAt     DateTime       @default(now())
-    updatedAt     DateTime       @updatedAt
+    createdAt     DateTime                @default(now())
+    updatedAt     DateTime                @updatedAt
 }
 
 model Bill {
@@ -67,6 +68,18 @@ model Expense {
     tenant      User     @relation(fields: [tenantId], references: [id])
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
+}
+
+model Budget {
+    id          String   @id @default(uuid())
+    tenantId    String
+    period      String   // "week" | "month" | "all"
+    amount      Float
+    tenant      User     @relation(fields: [tenantId], references: [id])
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    @@unique([tenantId, period])
 }
 
 model RentPlan {
@@ -124,13 +137,13 @@ model Reward {
 }
 
 model Conversation {
-    id        String             @id @default(uuid())
+    id        String                  @id @default(uuid())
     userId    String
     title     String?
-    user      User               @relation(fields: [userId], references: [id])
+    user      User                    @relation(fields: [userId], references: [id])
     messages  ConversationMessage[]
-    createdAt DateTime           @default(now())
-    updatedAt DateTime           @updatedAt
+    createdAt DateTime                @default(now())
+    updatedAt DateTime                @updatedAt
 }
 
 model ConversationMessage {

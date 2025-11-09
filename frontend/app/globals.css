@@ -5,8 +5,8 @@
   --foreground: #0f172a;
   --card-bg: #ffffff;
   --border: #e2e8f0;
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
+  --primary: #10b981;
+  --primary-hover: #059669;
 }
 
 @theme inline {
@@ -18,10 +18,12 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0f172a;
+    --background: #0a0f0d;
     --foreground: #f1f5f9;
-    --card-bg: #1e293b;
-    --border: #334155;
+    --card-bg: #1a2520;
+    --border: #2d4a3e;
+    --primary: #10b981;
+    --primary-hover: #34d399;
   }
 }
 
@@ -56,12 +58,12 @@ html {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #10b981;
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #059669;
 }
 
 /* Improved touch interactions */
