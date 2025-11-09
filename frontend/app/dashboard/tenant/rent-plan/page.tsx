@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button, Alert } from '@/components/UIComponents';
-import { PendingRentPlans } from '@/components/PendingRentPlans';
 import { rentPlansApi } from '@/lib/api';
 import { formatCurrency, formatDate, getStatusColor } from '@/lib/utils';
 import {
@@ -29,9 +28,7 @@ export default function TenantRentPlanPage() {
   const [processingPlanId, setProcessingPlanId] = useState<string | null>(null);
 
   useEffect(() => {
-    loadRentPlans();
-
-    // Check for success/cancel from Stripe redirect
+    // Check for success/cancel from Stripe redirect first
     const success = searchParams?.get('success');
     const cancelled = searchParams?.get('cancelled');
     const mock = searchParams?.get('mock');
@@ -39,16 +36,24 @@ export default function TenantRentPlanPage() {
     if (success === 'true') {
       setAlert({
         type: 'success',
-        message: mock ? 'Mock payment successful! Your rent plan is now active.' : 'Payment successful! Your rent plan is now active.',
+        message: mock ? 'Deposit paid successfully! Your rent plan is now active.' : 'Deposit paid successfully! Your rent plan is now active.',
       });
       // Clean up URL
       router.replace('/dashboard/tenant/rent-plan');
+      // Force reload after delay to ensure webhook processed
+      setTimeout(() => {
+        loadRentPlans();
+      }, 1000);
     } else if (cancelled === 'true') {
       setAlert({
         type: 'error',
         message: 'Payment was cancelled. You can try again anytime.',
       });
       router.replace('/dashboard/tenant/rent-plan');
+      loadRentPlans();
+    } else {
+      // Normal load
+      loadRentPlans();
     }
   }, [searchParams, router]);
 
@@ -120,7 +125,7 @@ export default function TenantRentPlanPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="animate-pulse">
-          <div className="text-lg font-semibold text-gray-600 dark:text-gray-400">
+          <div className="text-lg font-semibold text-card-text/70">
             Loading rent plans...
           </div>
         </div>
@@ -138,8 +143,8 @@ export default function TenantRentPlanPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Rent Plan</h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-1">
+        <h1 className="text-3xl font-bold text-card-text">Rent Plan</h1>
+        <p className="text-card-text/70 mt-1">
           View and manage your rental agreements
         </p>
       </div>
@@ -148,11 +153,6 @@ export default function TenantRentPlanPage() {
       {alert && (
         <Alert type={alert.type} message={alert.message} onClose={() => setAlert(null)} />
       )}
-
-      {/* Pending Rent Plan Requests */}
-      <div className="bg-card-bg rounded-2xl border border-border p-6 shadow-sm mb-6">
-        <PendingRentPlans />
-      </div>
 
       {/* Active Rent Plan */}
       {activePlan && (
@@ -246,27 +246,36 @@ export default function TenantRentPlanPage() {
 
       {/* Pending Proposals */}
       {pendingPlans.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-lg">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-            📬 Pending Proposals ({pendingPlans.length})
-          </h2>
+        <div className="bg-card-bg rounded-2xl border border-border p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-yellow-500/20 rounded-xl flex items-center justify-center">
+              <Clock className="w-5 h-5 text-yellow-500" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-card-text">Pending Proposals</h2>
+              <p className="text-sm text-card-text/70">
+                {pendingPlans.length} {pendingPlans.length === 1 ? 'proposal' : 'proposals'} awaiting your response
+              </p>
+            </div>
+          </div>
+
           <div className="space-y-4">
             {pendingPlans.map((plan) => (
               <div
                 key={plan.id}
-                className="p-5 border-2 border-yellow-300 dark:border-yellow-700 bg-yellow-50 dark:bg-yellow-900/10 rounded-xl"
+                className="bg-white/5 rounded-2xl border border-card-text/20 p-6"
               >
-                <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start justify-between mb-4 pb-4 border-b border-card-text/10">
                   <div>
-                    <h3 className="font-bold text-lg text-gray-900 dark:text-white">
+                    <h3 className="font-bold text-lg text-card-text">
                       Proposal from {plan.landlord?.name || 'Landlord'}
                     </h3>
                     {plan.landlord?.email && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <p className="text-sm text-card-text/70">
                         {plan.landlord.email}
                       </p>
                     )}
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    <p className="text-xs text-card-text/50 mt-1">
                       Proposed {formatDate(plan.proposedDate)}
                     </p>
                   </div>
@@ -276,51 +285,52 @@ export default function TenantRentPlanPage() {
                 </div>
 
                 {plan.description && (
-                  <div className="mb-4 p-3 bg-white dark:bg-gray-900 rounded-lg">
-                    <p className="text-sm text-gray-700 dark:text-gray-300">{plan.description}</p>
+                  <div className="mb-4 p-4 bg-white/5 rounded-xl">
+                    <p className="text-xs font-semibold text-card-text/70 mb-2">Terms & Notes</p>
+                    <p className="text-sm text-card-text/80">{plan.description}</p>
                   </div>
                 )}
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                  <div>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">Monthly Rent</p>
-                    <p className="text-xl font-bold text-gray-900 dark:text-white">
+                  <div className="bg-white/5 rounded-xl p-4">
+                    <p className="text-xs text-card-text/70 mb-1">Monthly Rent</p>
+                    <p className="text-xl font-bold text-card-text">
                       {formatCurrency(plan.monthlyRent)}
                     </p>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                  <div className="bg-white/5 rounded-xl p-4">
+                    <p className="text-xs text-card-text/70 mb-1">
                       Deposit (Due Now)
                     </p>
-                    <p className="text-xl font-bold text-primary dark:text-primary-light">
+                    <p className="text-xl font-bold text-primary">
                       {formatCurrency(plan.deposit)}
                     </p>
                   </div>
-                  <div>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">Duration</p>
-                    <p className="text-xl font-bold text-gray-900 dark:text-white">
+                  <div className="bg-white/5 rounded-xl p-4">
+                    <p className="text-xs text-card-text/70 mb-1">Duration</p>
+                    <p className="text-xl font-bold text-card-text">
                       {plan.duration} months
                     </p>
                   </div>
                   {plan.startDate && (
-                    <div>
-                      <p className="text-xs text-gray-600 dark:text-gray-400">Start Date</p>
-                      <p className="text-sm font-bold text-gray-900 dark:text-white">
+                    <div className="bg-white/5 rounded-xl p-4">
+                      <p className="text-xs text-card-text/70 mb-1">Start Date</p>
+                      <p className="text-sm font-bold text-card-text">
                         {formatDate(plan.startDate)}
                       </p>
                     </div>
                   )}
                 </div>
 
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-4">
+                <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 mb-4">
                   <div className="flex items-center gap-2">
-                    <CreditCard className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-                    <p className="text-sm text-blue-800 dark:text-blue-300">
-                      <strong>Accepting this plan requires a deposit payment of{' '}
+                    <CreditCard className="w-5 h-5 text-primary" />
+                    <p className="text-sm text-card-text">
+                      <strong>Accepting requires a deposit payment of{' '}
                       {formatCurrency(plan.deposit)}</strong>
                     </p>
                   </div>
-                  <p className="text-xs text-blue-600 dark:text-blue-400 mt-1 ml-7">
+                  <p className="text-xs text-card-text/70 mt-1 ml-7">
                     You'll be redirected to a secure Stripe checkout page
                   </p>
                 </div>
@@ -355,22 +365,27 @@ export default function TenantRentPlanPage() {
 
       {/* Awaiting Payment (Accepted but not completed) */}
       {acceptedPlans.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-lg">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-            ⏳ Awaiting Payment Confirmation
-          </h2>
-          <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-            Your payment is being processed. This usually takes a few minutes.
-          </p>
+        <div className="bg-card-bg rounded-2xl border border-border p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
+              <Clock className="w-5 h-5 text-blue-500" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-card-text">Awaiting Payment Confirmation</h2>
+              <p className="text-sm text-card-text/70">
+                Your payment is being processed. This usually takes a few minutes.
+              </p>
+            </div>
+          </div>
           {acceptedPlans.map((plan) => (
             <div
               key={plan.id}
-              className="p-4 border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/10 rounded-lg"
+              className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl"
             >
-              <p className="font-medium text-gray-900 dark:text-white">
+              <p className="font-medium text-card-text">
                 Rent Plan with {plan.landlord?.name}
               </p>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-sm text-card-text/70 mt-1">
                 {formatCurrency(plan.monthlyRent)}/month • {plan.duration} months
               </p>
             </div>
@@ -380,24 +395,24 @@ export default function TenantRentPlanPage() {
 
       {/* All Plans History */}
       {rentPlans.length > 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-lg">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+        <div className="bg-card-bg rounded-2xl border border-border p-6 shadow-sm">
+          <h2 className="text-xl font-bold text-card-text mb-4">
             Plan History
           </h2>
           <div className="space-y-3">
             {rentPlans.map((plan) => (
               <div
                 key={plan.id}
-                className="flex items-center justify-between p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-900 transition-colors"
+                className="flex items-center justify-between p-4 bg-white/5 border border-card-text/20 rounded-xl hover:bg-white/10 transition-colors"
               >
                 <div>
-                  <p className="font-medium text-gray-900 dark:text-white">
+                  <p className="font-medium text-card-text">
                     {plan.landlord?.name || 'Landlord'}
                   </p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                  <p className="text-sm text-card-text/70">
                     {formatCurrency(plan.monthlyRent)}/month • {plan.duration} months
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  <p className="text-xs text-card-text/50 mt-1">
                     {formatDate(plan.proposedDate)}
                   </p>
                 </div>
@@ -416,15 +431,15 @@ export default function TenantRentPlanPage() {
 
       {/* Empty State */}
       {rentPlans.length === 0 && (
-        <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-12 text-center shadow-lg">
-          <FileText className="w-20 h-20 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+        <div className="bg-card-bg rounded-2xl border border-border p-12 text-center shadow-sm">
+          <FileText className="w-20 h-20 text-card-text/30 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-card-text mb-2">
             No Rent Plans Yet
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-2">
+          <p className="text-card-text/70 mb-2">
             Your landlord hasn't sent you any rental proposals yet.
           </p>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-sm text-card-text/50">
             When they do, you'll be able to review and accept them here.
           </p>
         </div>
