@@ -232,10 +232,10 @@ export default function ExpensesPage() {
           {budget && period === 'month' && (
             <div className="text-right">
               <p className="text-sm text-primary-light dark:text-primary-light">Monthly Budget</p>
-              <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-200 mt-1">
+              <p className="text-2xl font-bold text-primary dark:text-primary-light mt-1">
                 {formatCurrency(budget.amount)}
               </p>
-              <p className="text-sm text-emerald-600 dark:text-emerald-400 mt-1">
+              <p className="text-sm text-primary dark:text-primary-light mt-1">
                 {budget.amount - totalSpent > 0 
                   ? `${formatCurrency(budget.amount - totalSpent)} left`
                   : `${formatCurrency(totalSpent - budget.amount)} over`}
