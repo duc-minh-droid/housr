@@ -135,26 +135,25 @@ export function BudgetAllocationModal({
     <Modal isOpen={isOpen} onClose={onClose} title="Allocate Budget by Category">
       <div className="space-y-6">
         {/* Summary */}
-        <div className="bg-gradient-to-br from-[#2a5335]/10 to-[#2a5335]/20 dark:from-[#2a5335]/20 dark:to-[#2a5335]/10 rounded-xl p-4 border border-[#2a5335]/30">
+                  <div className="bg-gradient-to-br from-primary/10 to-primary/20 dark:from-primary/20 dark:to-primary/10 rounded-xl p-4 border border-primary/30">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-semibold" style={{ color: '#2a5335' }}>
+            <span className="text-sm font-semibold text-primary dark:text-primary-light">
               Total Budget
             </span>
-            <span className="text-2xl font-bold" style={{ color: '#2a5335' }}>
+            <span className="text-2xl font-bold text-primary dark:text-primary-light">
               {formatCurrency(totalBudget)}
             </span>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm" style={{ color: '#2a5335' }}>
+            <span className="text-sm text-primary dark:text-primary-light">
               Allocated
             </span>
             <span
               className={`text-lg font-bold ${
                 isValid
-                  ? ''
+                  ? 'text-primary dark:text-primary-light'
                   : 'text-red-600 dark:text-red-400'
               }`}
-              style={isValid ? { color: '#2a5335' } : undefined}
             >
               {totalPercentage.toFixed(1)}%
             </span>
@@ -210,8 +209,7 @@ export function BudgetAllocationModal({
             type="button"
             onClick={handleSave}
             disabled={isSaving || !isValid}
-            className="flex-1 px-5 py-3 text-base font-semibold text-white rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            style={{ backgroundColor: '#2a5335' }}
+            className="flex-1 px-5 py-3 text-base font-semibold text-white bg-gradient-to-r from-primary to-primary-light hover:from-primary-dark hover:to-primary rounded-xl transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {isSaving ? (
               <>

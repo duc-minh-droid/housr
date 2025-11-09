@@ -89,10 +89,10 @@ export function ExpensesChart({ data, period }: ExpensesChartProps) {
           <Line
             type="monotone"
             dataKey="total"
-            stroke="#10b981"
+            stroke="#204E3A"
             strokeWidth={3}
-            dot={{ fill: '#10b981', r: 5 }}
-            activeDot={{ r: 7, fill: '#059669' }}
+            dot={{ fill: '#204E3A', r: 5 }}
+            activeDot={{ r: 7, fill: '#163828' }}
           />
         </LineChart>
       </ResponsiveContainer>
