@@ -1,5 +1,5 @@
 // Mock API for Demo Tenant - No backend integration required
-import { User, Bill, Expense, RentPlan, ShopItem, Redemption } from '@/types';
+import { User, Bill, Expense, RentPlan, ShopItem, Redemption, Conversation, ChatMessage } from '@/types';
 import {
   mockUsers,
   mockBills,
@@ -433,5 +433,179 @@ export const mockDashboardApi = {
       monthlyExpenses: monthlyTotal,
       rentPlan,
     };
+  },
+};
+
+// Mock conversations storage
+const mockConversations: Conversation[] = [];
+const mockMessages: ChatMessage[] = [];
+
+// Mock AI Chat API
+export const mockAiChatApi = {
+  createConversation: async (title?: string): Promise<Conversation> => {
+    await delay();
+    const user = getCurrentMockUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const newConversation: Conversation = {
+      id: `mock-conv-${Date.now()}`,
+      userId: user.id,
+      title: title || 'New Conversation',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      messages: [],
+    };
+
+    mockConversations.push(newConversation);
+    return newConversation;
+  },
+
+  getConversations: async (): Promise<Conversation[]> => {
+    await delay();
+    const user = getCurrentMockUser();
+    if (!user) throw new Error('Not authenticated');
+
+    return mockConversations
+      .filter(c => c.userId === user.id)
+      .map(conv => ({
+        ...conv,
+        messages: mockMessages
+          .filter(m => m.conversationId === conv.id)
+          .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+          .slice(0, 1), // Only first message for preview
+      }))
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  },
+
+  getConversation: async (conversationId: string): Promise<Conversation> => {
+    await delay();
+    const user = getCurrentMockUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const conversation = mockConversations.find(c => c.id === conversationId && c.userId === user.id);
+    if (!conversation) throw new Error('Conversation not found');
+
+    const messages = mockMessages
+      .filter(m => m.conversationId === conversationId)
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+    return {
+      ...conversation,
+      messages,
+    };
+  },
+
+  sendMessage: async (conversationId: string, message: string) => {
+    await delay(500); // Longer delay to simulate AI processing
+    const user = getCurrentMockUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const conversation = mockConversations.find(c => c.id === conversationId && c.userId === user.id);
+    if (!conversation) throw new Error('Conversation not found');
+
+    // Create user message
+    const userMessage: ChatMessage = {
+      id: `mock-msg-${Date.now()}-user`,
+      conversationId,
+      role: 'user',
+      content: message,
+      createdAt: new Date().toISOString(),
+    };
+    mockMessages.push(userMessage);
+
+    // Get user's financial data for context
+    const expenses = await mockExpensesApi.getExpenses();
+    const bills = await mockBillsApi.getBills();
+    const rentPlan = await mockRentPlansApi.getTenantPlan();
+
+    // Generate mock AI response based on context
+    let aiResponse = '';
+    const lowerMessage = message.toLowerCase();
+
+    if (lowerMessage.includes('expense') || lowerMessage.includes('spending')) {
+      const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+      const categoryTotals: { [key: string]: number } = {};
+      expenses.forEach(exp => {
+        categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + exp.amount;
+      });
+      const topCategory = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0];
+      
+      aiResponse = `Based on your expense data, you've spent a total of $${totalExpenses.toFixed(2)}. Your highest spending category is ${topCategory[0]} at $${topCategory[1].toFixed(2)}. Consider setting a budget for this category to help manage your spending better!`;
+    } else if (lowerMessage.includes('bill') || lowerMessage.includes('payment')) {
+      const unpaidBills = bills.filter(b => !b.isPaid);
+      const totalDue = unpaidBills.reduce((sum, b) => sum + b.amount, 0);
+      
+      if (unpaidBills.length > 0) {
+        aiResponse = `You currently have ${unpaidBills.length} unpaid bill(s) totaling $${totalDue.toFixed(2)}. I recommend paying these as soon as possible to maintain a good payment record and earn reward points!`;
+      } else {
+        aiResponse = `Great news! You're all caught up on your bills. Keep up the excellent payment habits to continue earning reward points!`;
+      }
+    } else if (lowerMessage.includes('save') || lowerMessage.includes('money')) {
+      aiResponse = `Here are some personalized tips to save money: 1) Review your spending on non-essentials like entertainment and dining out. 2) Set up automatic savings transfers on payday. 3) Take advantage of your reward points for discounts. Would you like me to analyze your spending in a specific category?`;
+    } else if (lowerMessage.includes('rent')) {
+      if (rentPlan) {
+        aiResponse = `Your current rent is $${rentPlan.monthlyRent.toFixed(2)} per month with a $${rentPlan.deposit.toFixed(2)} deposit. This is a ${rentPlan.duration}-month lease. Make sure to pay on time to earn reward points and maintain a good rental history!`;
+      } else {
+        aiResponse = `I don't see an active rent plan for you. Please check with your landlord to set up your rental agreement.`;
+      }
+    } else if (lowerMessage.includes('budget')) {
+      aiResponse = `A good budgeting strategy is the 50/30/20 rule: 50% for needs, 30% for wants, and 20% for savings. Based on your expenses, I can help you analyze if you're following this ratio. Would you like me to break down your spending by category?`;
+    } else if (lowerMessage.includes('point') || lowerMessage.includes('reward')) {
+      aiResponse = `You currently have ${user.points || 0} reward points! You earn points by paying rent on time and staying under your monthly budget. Check out the Shop page to redeem your points for rewards and discounts!`;
+    } else {
+      // Default helpful response
+      aiResponse = `I'm here to help with your finances! You can ask me about:\n• Your expenses and spending patterns\n• Unpaid bills and payment schedules\n• Budgeting tips and savings strategies\n• Your rent plan details\n• How to earn and use reward points\n\nWhat would you like to know?`;
+    }
+
+    // Create AI message
+    const assistantMessage: ChatMessage = {
+      id: `mock-msg-${Date.now()}-assistant`,
+      conversationId,
+      role: 'assistant',
+      content: aiResponse,
+      createdAt: new Date(Date.now() + 100).toISOString(), // Slightly after user message
+    };
+    mockMessages.push(assistantMessage);
+
+    // Update conversation timestamp
+    conversation.updatedAt = new Date().toISOString();
+
+    return {
+      userMessage,
+      assistantMessage,
+    };
+  },
+
+  updateConversation: async (conversationId: string, title: string): Promise<Conversation> => {
+    await delay();
+    const user = getCurrentMockUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const conversation = mockConversations.find(c => c.id === conversationId && c.userId === user.id);
+    if (!conversation) throw new Error('Conversation not found');
+
+    conversation.title = title;
+    conversation.updatedAt = new Date().toISOString();
+
+    return conversation;
+  },
+
+  deleteConversation: async (conversationId: string): Promise<void> => {
+    await delay();
+    const user = getCurrentMockUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const index = mockConversations.findIndex(c => c.id === conversationId && c.userId === user.id);
+    if (index === -1) throw new Error('Conversation not found');
+
+    mockConversations.splice(index, 1);
+    
+    // Delete all messages in this conversation
+    const messageIndices = mockMessages
+      .map((m, i) => (m.conversationId === conversationId ? i : -1))
+      .filter(i => i !== -1)
+      .reverse(); // Delete from end to start to maintain indices
+    
+    messageIndices.forEach(i => mockMessages.splice(i, 1));
   },
 };

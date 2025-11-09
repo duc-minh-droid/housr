@@ -11,6 +11,7 @@ import {
   mockShopApi,
   mockDashboardApi,
   mockBudgetApi,
+  mockAiChatApi,
 } from './mockApi';
 
 // Base URL for API - Port 5001 for RentEase Backend
@@ -507,6 +508,10 @@ export const dashboardApi = {
 export const aiChatApi = {
   // Create a new conversation
   createConversation: async (title?: string) => {
+    if (isCurrentUserMock()) {
+      return mockAiChatApi.createConversation(title);
+    }
+
     const data = await fetchWithAuth('/api/ai/conversations', {
       method: 'POST',
       body: JSON.stringify({ title: title || 'New Conversation' }),
@@ -516,18 +521,30 @@ export const aiChatApi = {
   
   // Get all conversations for the user
   getConversations: async () => {
+    if (isCurrentUserMock()) {
+      return mockAiChatApi.getConversations();
+    }
+
     const data = await fetchWithAuth('/api/ai/conversations');
     return data.conversations || data;
   },
   
   // Get a specific conversation with all messages
   getConversation: async (conversationId: string) => {
+    if (isCurrentUserMock()) {
+      return mockAiChatApi.getConversation(conversationId);
+    }
+
     const data = await fetchWithAuth(`/api/ai/conversations/${conversationId}`);
     return data.conversation || data;
   },
   
   // Send a message in a conversation
   sendMessage: async (conversationId: string, message: string) => {
+    if (isCurrentUserMock()) {
+      return mockAiChatApi.sendMessage(conversationId, message);
+    }
+
     const data = await fetchWithAuth(`/api/ai/conversations/${conversationId}/messages`, {
       method: 'POST',
       body: JSON.stringify({ message }),
@@ -537,6 +554,10 @@ export const aiChatApi = {
   
   // Update conversation title
   updateConversation: async (conversationId: string, title: string) => {
+    if (isCurrentUserMock()) {
+      return mockAiChatApi.updateConversation(conversationId, title);
+    }
+
     const data = await fetchWithAuth(`/api/ai/conversations/${conversationId}`, {
       method: 'PATCH',
       body: JSON.stringify({ title }),
@@ -546,6 +567,10 @@ export const aiChatApi = {
   
   // Delete a conversation
   deleteConversation: async (conversationId: string) => {
+    if (isCurrentUserMock()) {
+      return mockAiChatApi.deleteConversation(conversationId);
+    }
+
     const data = await fetchWithAuth(`/api/ai/conversations/${conversationId}`, {
       method: 'DELETE',
     });
