@@ -14,7 +14,7 @@ import {
   mockAiChatApi,
 } from './mockApi';
 
-// Base URL for API - Port 5001 for RentEase Backend
+// Base URL for API - Port 5001 for Financr Backend
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
 // Helper function to get auth token

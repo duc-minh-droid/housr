@@ -77,16 +77,16 @@ export default function Home() {
             <span className="text-sm font-medium text-blue-600">Modern Rental Management</span>
           </motion.div>
           
-          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
+          <h1 className="text-5xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6">
             Welcome to{" "}
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-blue-400">
-              RentEase
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-light dark:from-primary-light dark:to-primary">
+              Financr
             </span>
           </h1>
           
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Transparent rental management for tenants and landlords. Track bills,
-            manage payments, and earn rewards for on-time payments.
+          <p className="text-xl text-gray-600 dark:text-gray-400 mb-8 max-w-2xl mx-auto">
+            Smart financial management for modern living. Track expenses,
+            manage bills, and earn rewards for smart financial habits.
           </p>
           
           <motion.div
