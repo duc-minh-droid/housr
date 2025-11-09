@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Check, AlertCircle, TrendingUp } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { Button, Modal } from '@/components/UIComponents';
+import { InteractivePieChart } from './InteractivePieChart';
 
 interface CategoryAllocation {
   category: string;
@@ -194,68 +195,13 @@ export function BudgetAllocationModal({
           </div>
         )}
 
-        {/* Category Sliders */}
-        <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
-          {allocations.map((allocation) => {
-            const colorClass = CATEGORY_COLORS[allocation.category] || CATEGORY_COLORS.Other;
-            
-            // Calculate max allowed for this category (100% - sum of others)
-            const otherAllocationsTotal = allocations
-              .filter(a => a.category !== allocation.category)
-              .reduce((sum, a) => sum + a.percentage, 0);
-            const maxAllowed = 100 - otherAllocationsTotal;
-            
-            return (
-              <motion.div
-                key={allocation.category}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="space-y-1.5"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className={`w-3 h-3 rounded-full ${colorClass}`} />
-                    <span className="font-medium text-gray-900 dark:text-white">
-                      {allocation.category}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-semibold min-w-[4rem] text-right" style={{ color: '#2a5335' }}>
-                      {formatCurrency(allocation.amount)}
-                    </span>
-                    <input
-                      type="number"
-                      min="0"
-                      max={maxAllowed}
-                      step="0.1"
-                      value={allocation.percentage}
-                      onChange={(e) =>
-                        handlePercentageChange(allocation.category, parseFloat(e.target.value) || 0)
-                      }
-                      className="w-16 px-2 py-1 text-sm text-right border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-[#2a5335]"
-                    />
-                    <span className="text-sm text-gray-600 dark:text-gray-400">%</span>
-                  </div>
-                </div>
-                <div className="relative h-1.5">
-                  <input
-                    type="range"
-                    min="0"
-                    max={maxAllowed}
-                    step="0.1"
-                    value={allocation.percentage}
-                    onChange={(e) =>
-                      handlePercentageChange(allocation.category, parseFloat(e.target.value))
-                    }
-                    className="w-full h-1.5 rounded-lg appearance-none cursor-pointer bg-gray-200 dark:bg-gray-700"
-                    style={{
-                      background: `linear-gradient(to right, #2a5335 ${(allocation.percentage / maxAllowed) * 100}%, rgb(229, 231, 235) ${(allocation.percentage / maxAllowed) * 100}%)`,
-                    }}
-                  />
-                </div>
-              </motion.div>
-            );
-          })}
+        {/* Interactive Pie Chart */}
+        <div className="py-4">
+          <InteractivePieChart
+            allocations={allocations}
+            totalBudget={totalBudget}
+            onUpdate={handlePercentageChange}
+          />
         </div>
 
         {/* Actions */}
