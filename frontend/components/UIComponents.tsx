@@ -37,7 +37,7 @@ export function DashboardCard({ title, value, subtitle, icon, trend, delay = 0, 
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
       className={cn(
-        "bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-5 shadow-sm hover:shadow-xl transition-all duration-300",
+        "bg-white dark:bg-surface-dark rounded-2xl border border-gray-100 dark:border-border-dark p-5 shadow-sm hover:shadow-xl transition-all duration-300",
         onClick && "cursor-pointer"
       )}
     >
@@ -68,7 +68,7 @@ export function DashboardCard({ title, value, subtitle, icon, trend, delay = 0, 
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ delay: delay + 0.15, type: "spring", stiffness: 200 }}
-            className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/30 dark:to-emerald-800/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400"
+            className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-primary/10 to-primary/20 dark:from-primary/20 dark:to-primary/30 flex items-center justify-center text-primary dark:text-primary-light"
           >
             {icon}
           </motion.div>
@@ -79,7 +79,7 @@ export function DashboardCard({ title, value, subtitle, icon, trend, delay = 0, 
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: delay + 0.3 }}
-          className="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center gap-1.5"
+          className="mt-4 pt-3 border-t border-gray-100 dark:border-border-dark flex items-center gap-1.5"
         >
           <motion.div
             animate={{ y: trend.positive ? [0, -2, 0] : [0, 2, 0] }}
@@ -183,9 +183,9 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 100 }}
               transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-              className="bg-white dark:bg-gray-800 rounded-t-3xl sm:rounded-3xl w-full sm:max-w-lg max-h-[90vh] overflow-hidden shadow-2xl"
+              className="bg-white dark:bg-surface-dark rounded-t-3xl sm:rounded-3xl w-full sm:max-w-lg max-h-[90vh] overflow-hidden shadow-2xl"
             >
-              <div className="flex items-center justify-between p-5 sm:p-6 border-b border-gray-100 dark:border-gray-700 sticky top-0 bg-white dark:bg-gray-800 z-10">
+              <div className="flex items-center justify-between p-5 sm:p-6 border-b border-gray-100 dark:border-border-dark sticky top-0 bg-white dark:bg-surface-dark z-10">
                 <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white">{title}</h2>
                 <motion.button
                   whileHover={{ scale: 1.1, rotate: 90 }}
@@ -227,10 +227,10 @@ export function Button({
   const baseStyles = 'rounded-xl font-semibold transition-all inline-flex items-center justify-center gap-2 active:scale-95';
   
   const variants = {
-    primary: 'bg-gradient-to-r from-emerald-600 to-emerald-500 text-white hover:from-emerald-700 hover:to-emerald-600 shadow-lg shadow-emerald-600/30 hover:shadow-xl hover:shadow-emerald-600/40',
-    secondary: 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-600',
+    primary: 'bg-gradient-to-r from-primary to-primary-light text-white hover:from-primary-dark hover:to-primary shadow-lg shadow-primary/30 hover:shadow-xl hover:shadow-primary/40',
+    secondary: 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 hover:bg-gray-200 dark:hover:bg-gray-700',
     danger: 'bg-red-600 text-white hover:bg-red-700 shadow-lg shadow-red-600/30 hover:shadow-xl hover:shadow-red-600/40',
-    ghost: 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-emerald-50 dark:hover:bg-emerald-900/20',
+    ghost: 'bg-transparent text-gray-700 dark:text-gray-300 hover:bg-primary/5 dark:hover:bg-primary/10',
   };
 
   const sizes = {
