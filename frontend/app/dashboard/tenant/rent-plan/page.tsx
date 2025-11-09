@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button, Modal, Alert } from '@/components/UIComponents';
+import { Button, Alert } from '@/components/UIComponents';
 import { rentPlansApi } from '@/lib/api';
 import { formatCurrency, formatDate, getStatusColor } from '@/lib/utils';
 
@@ -21,8 +21,34 @@ export default function TenantRentPlanPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    loadRentPlan();
-  }, [user]);
+    // Check for success/cancel from Stripe redirect first
+    const success = searchParams?.get('success');
+    const cancelled = searchParams?.get('cancelled');
+    const mock = searchParams?.get('mock');
+
+    if (success === 'true') {
+      setAlert({
+        type: 'success',
+        message: mock ? 'Deposit paid successfully! Your rent plan is now active.' : 'Deposit paid successfully! Your rent plan is now active.',
+      });
+      // Clean up URL
+      router.replace('/dashboard/tenant/rent-plan');
+      // Force reload after delay to ensure webhook processed
+      setTimeout(() => {
+        loadRentPlans();
+      }, 1000);
+    } else if (cancelled === 'true') {
+      setAlert({
+        type: 'error',
+        message: 'Payment was cancelled. You can try again anytime.',
+      });
+      router.replace('/dashboard/tenant/rent-plan');
+      loadRentPlans();
+    } else {
+      // Normal load
+      loadRentPlans();
+    }
+  }, [searchParams, router]);
 
   const loadRentPlan = async () => {
     if (!user) return;
@@ -77,31 +103,30 @@ export default function TenantRentPlanPage() {
   };
 
   if (isLoading) {
-    return <div className="text-gray-600">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="animate-pulse">
+          <div className="text-lg font-semibold text-card-text/70">
+            Loading rent plans...
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Rent Plan</h1>
-          <p className="text-gray-600 mt-1">Propose and manage your rental agreement</p>
-        </div>
-        {(!rentPlan || rentPlan.status === 'rejected') && (
-          <Button onClick={() => setIsModalOpen(true)} variant="primary">
-            {rentPlan ? 'Submit New Plan' : 'Propose Rent Plan'}
-          </Button>
-        )}
+      <div>
+        <h1 className="text-3xl font-bold text-card-text">Rent Plan</h1>
+        <p className="text-card-text/70 mt-1">
+          View and manage your rental agreements
+        </p>
       </div>
 
       {/* Alert */}
       {alert && (
-        <Alert
-          type={alert.type}
-          message={alert.message}
-          onClose={() => setAlert(null)}
-        />
+        <Alert type={alert.type} message={alert.message} onClose={() => setAlert(null)} />
       )}
 
       {/* Current Rent Plan */}
@@ -166,125 +191,206 @@ export default function TenantRentPlanPage() {
             </div>
           )}
 
-          {rentPlan.status === 'pending' && (
-            <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-              <p className="text-sm font-medium text-yellow-800">
-                ⏳ Waiting for landlord approval
-              </p>
-              <p className="text-sm text-yellow-700 mt-1">
-                Your landlord will review your proposal soon.
+      {/* Pending Proposals */}
+      {pendingPlans.length > 0 && (
+        <div className="bg-card-bg rounded-2xl border border-border p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 bg-yellow-500/20 rounded-xl flex items-center justify-center">
+              <Clock className="w-5 h-5 text-yellow-500" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-card-text">Pending Proposals</h2>
+              <p className="text-sm text-card-text/70">
+                {pendingPlans.length} {pendingPlans.length === 1 ? 'proposal' : 'proposals'} awaiting your response
               </p>
             </div>
-          )}
-        </div>
-      ) : (
-        <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
-          <div className="text-6xl mb-4">🏠</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">No Rent Plan Yet</h2>
-          <p className="text-gray-600 mb-6">
-            Submit a rent plan proposal to your landlord to get started.
-          </p>
-          <Button onClick={() => setIsModalOpen(true)} variant="primary">
-            Propose Rent Plan
-          </Button>
+          </div>
+
+          <div className="space-y-4">
+            {pendingPlans.map((plan) => (
+              <div
+                key={plan.id}
+                className="bg-white/5 rounded-2xl border border-card-text/20 p-6"
+              >
+                <div className="flex items-start justify-between mb-4 pb-4 border-b border-card-text/10">
+                  <div>
+                    <h3 className="font-bold text-lg text-card-text">
+                      Proposal from {plan.landlord?.name || 'Landlord'}
+                    </h3>
+                    {plan.landlord?.email && (
+                      <p className="text-sm text-card-text/70">
+                        {plan.landlord.email}
+                      </p>
+                    )}
+                    <p className="text-xs text-card-text/50 mt-1">
+                      Proposed {formatDate(plan.proposedDate)}
+                    </p>
+                  </div>
+                  <span className="px-3 py-1 bg-yellow-500 text-white rounded-full text-xs font-bold">
+                    ACTION REQUIRED
+                  </span>
+                </div>
+
+                {plan.description && (
+                  <div className="mb-4 p-4 bg-white/5 rounded-xl">
+                    <p className="text-xs font-semibold text-card-text/70 mb-2">Terms & Notes</p>
+                    <p className="text-sm text-card-text/80">{plan.description}</p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                  <div className="bg-white/5 rounded-xl p-4">
+                    <p className="text-xs text-card-text/70 mb-1">Monthly Rent</p>
+                    <p className="text-xl font-bold text-card-text">
+                      {formatCurrency(plan.monthlyRent)}
+                    </p>
+                  </div>
+                  <div className="bg-white/5 rounded-xl p-4">
+                    <p className="text-xs text-card-text/70 mb-1">
+                      Deposit (Due Now)
+                    </p>
+                    <p className="text-xl font-bold text-primary">
+                      {formatCurrency(plan.deposit)}
+                    </p>
+                  </div>
+                  <div className="bg-white/5 rounded-xl p-4">
+                    <p className="text-xs text-card-text/70 mb-1">Duration</p>
+                    <p className="text-xl font-bold text-card-text">
+                      {plan.duration} months
+                    </p>
+                  </div>
+                  {plan.startDate && (
+                    <div className="bg-white/5 rounded-xl p-4">
+                      <p className="text-xs text-card-text/70 mb-1">Start Date</p>
+                      <p className="text-sm font-bold text-card-text">
+                        {formatDate(plan.startDate)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 mb-4">
+                  <div className="flex items-center gap-2">
+                    <CreditCard className="w-5 h-5 text-primary" />
+                    <p className="text-sm text-card-text">
+                      <strong>Accepting requires a deposit payment of{' '}
+                      {formatCurrency(plan.deposit)}</strong>
+                    </p>
+                  </div>
+                  <p className="text-xs text-card-text/70 mt-1 ml-7">
+                    You'll be redirected to a secure Stripe checkout page
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <Button
+                    onClick={() => handleAcceptPlan(plan.id)}
+                    disabled={processingPlanId === plan.id}
+                    variant="primary"
+                    fullWidth
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    {processingPlanId === plan.id
+                      ? 'Processing...'
+                      : `Accept & Pay ${formatCurrency(plan.deposit)}`}
+                  </Button>
+                  <Button
+                    onClick={() => handleRejectPlan(plan.id)}
+                    disabled={processingPlanId === plan.id}
+                    variant="danger"
+                    fullWidth
+                  >
+                    <XCircle className="w-4 h-4" />
+                    Reject
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
-      {/* Propose Plan Modal */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => {
-          setIsModalOpen(false);
-          resetForm();
-        }}
-        title="Propose Rent Plan"
-      >
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Landlord ID
-            </label>
-            <input
-              type="text"
-              value={landlordId}
-              onChange={(e) => setLandlordId(e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter your landlord's ID"
-            />
+      {/* Awaiting Payment (Accepted but not completed) */}
+      {acceptedPlans.length > 0 && (
+        <div className="bg-card-bg rounded-2xl border border-border p-6 shadow-sm">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
+              <Clock className="w-5 h-5 text-blue-500" />
+            </div>
+            <div>
+              <h2 className="text-xl font-bold text-card-text">Awaiting Payment Confirmation</h2>
+              <p className="text-sm text-card-text/70">
+                Your payment is being processed. This usually takes a few minutes.
+              </p>
+            </div>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Monthly Rent
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={monthlyRent}
-              onChange={(e) => setMonthlyRent(e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              placeholder="1500.00"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Security Deposit
-            </label>
-            <input
-              type="number"
-              step="0.01"
-              min="0"
-              value={deposit}
-              onChange={(e) => setDeposit(e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              placeholder="3000.00"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Duration (months)
-            </label>
-            <input
-              type="number"
-              min="1"
-              value={duration}
-              onChange={(e) => setDuration(e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-              placeholder="12"
-            />
-          </div>
-
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <p className="text-sm text-blue-800">
-              <strong>Note:</strong> Your landlord will review this proposal. You can modify it later if needed.
-            </p>
-          </div>
-
-          <div className="flex gap-3">
-            <Button type="submit" variant="primary" fullWidth disabled={isSubmitting}>
-              {isSubmitting ? 'Submitting...' : 'Submit Proposal'}
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              fullWidth
-              onClick={() => {
-                setIsModalOpen(false);
-                resetForm();
-              }}
+          {acceptedPlans.map((plan) => (
+            <div
+              key={plan.id}
+              className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl"
             >
-              Cancel
-            </Button>
+              <p className="font-medium text-card-text">
+                Rent Plan with {plan.landlord?.name}
+              </p>
+              <p className="text-sm text-card-text/70 mt-1">
+                {formatCurrency(plan.monthlyRent)}/month • {plan.duration} months
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* All Plans History */}
+      {rentPlans.length > 0 && (
+        <div className="bg-card-bg rounded-2xl border border-border p-6 shadow-sm">
+          <h2 className="text-xl font-bold text-card-text mb-4">
+            Plan History
+          </h2>
+          <div className="space-y-3">
+            {rentPlans.map((plan) => (
+              <div
+                key={plan.id}
+                className="flex items-center justify-between p-4 bg-white/5 border border-card-text/20 rounded-xl hover:bg-white/10 transition-colors"
+              >
+                <div>
+                  <p className="font-medium text-card-text">
+                    {plan.landlord?.name || 'Landlord'}
+                  </p>
+                  <p className="text-sm text-card-text/70">
+                    {formatCurrency(plan.monthlyRent)}/month • {plan.duration} months
+                  </p>
+                  <p className="text-xs text-card-text/50 mt-1">
+                    {formatDate(plan.proposedDate)}
+                  </p>
+                </div>
+                <span
+                  className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
+                    plan.status
+                  )}`}
+                >
+                  {plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}
+                </span>
+              </div>
+            ))}
           </div>
-        </form>
-      </Modal>
+        </div>
+      )}
+
+      {/* Empty State */}
+      {rentPlans.length === 0 && (
+        <div className="bg-card-bg rounded-2xl border border-border p-12 text-center shadow-sm">
+          <FileText className="w-20 h-20 text-card-text/30 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-card-text mb-2">
+            No Rent Plans Yet
+          </h2>
+          <p className="text-card-text/70 mb-2">
+            Your landlord hasn't sent you any rental proposals yet.
+          </p>
+          <p className="text-sm text-card-text/50">
+            When they do, you'll be able to review and accept them here.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
