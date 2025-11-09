@@ -1,32 +1,36 @@
 @import "tailwindcss";
 
 :root {
-  /* Light Mode - Pure White Base */
+  /* Light Mode - White background with Green containers */
   --background: #FFFFFF;
   --foreground: #1E1E1E;
-  --card-bg: #FFFFFF;
-  --border: #E5EAE8;
-  --sidebar-bg: #F8FAFB;
+  --card-bg: #204E3A;              /* Financr green for containers */
+  --card-text: #FFFFFF;            /* White text on green containers */
+  --border: #3B6B4C;               /* Green borders */
+  --sidebar-bg: #E8F5F0;           /* Soft green sidebar */
   --primary: #204E3A;
   --primary-hover: #2a6449;
   --primary-light: #3B6B4C;
   --primary-dark: #163828;
-  --surface: #FFFFFF;
-  --text-light: #1E1E1E;
-  --text-dark: #E2E8E4;
-  --border-light: #E5EAE8;
-  --border-dark: #1E2520;
+  --surface: #204E3A;              /* Green surface */
+  --text-light: #1E1E1E;           /* Dark text for main background */
+  --text-dark: #FFFFFF;            /* White text for containers */
+  --border-light: #3B6B4C;
+  --border-dark: #2A2F2C;
 }
 
 .dark {
-  /* Dark Mode - Deep Navy/Charcoal Dashboard Style */
-  --background: #0F1210;
-  --foreground: #E8EDE9;
-  --card-bg: #1A1F1C;
-  --border: #2A2F2C;
-  --sidebar-bg: #0A0D0B;
+  /* Dark Mode - Deep Navy/Charcoal with dark containers */
+  --background: #0F1210;           /* Deep navy background */
+  --foreground: #E8EDE9;           /* Light text */
+  --card-bg: #1A1F1C;              /* Dark containers */
+  --card-text: #E8EDE9;            /* Light text on dark containers */
+  --border: #2A2F2C;               /* Subtle borders */
+  --sidebar-bg: #0A0D0B;           /* Darker sidebar */
   --primary-hover: #3B6B4C;
-  --surface: #1A1F1C;
+  --surface: #1A1F1C;              /* Dark surface */
+  --text-light: #1E1E1E;
+  --text-dark: #E8EDE9;
 }
 
 @theme inline {
@@ -37,9 +41,11 @@
   --color-primary-light: var(--primary-light);
   --color-primary-dark: var(--primary-dark);
   --color-surface: var(--surface);
+  --color-card-bg: var(--card-bg);
+  --color-card-text: var(--card-text);
   --color-border: var(--border);
   --color-sidebar-bg: var(--sidebar-bg);
-  --color-surface-light: #FFFFFF;
+  --color-surface-light: #204E3A;
   --color-surface-dark: #1A1F1C;
   --color-text-light: #1E1E1E;
   --color-text-dark: #E8EDE9;
