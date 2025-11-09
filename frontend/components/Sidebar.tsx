@@ -84,7 +84,7 @@ export function Sidebar({ role }: SidebarProps) {
           width: isCollapsed ? '80px' : '288px'
         }}
         transition={{ duration: 0.3, type: "spring" }}
-        className="fixed left-0 top-0 h-screen bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex flex-col z-50 shadow-lg"
+        className="fixed left-0 top-0 h-screen bg-sidebar-bg border-r border-gray-200 dark:border-border flex flex-col z-50 shadow-lg"
       >
         {/* Toggle Button */}
         <motion.button

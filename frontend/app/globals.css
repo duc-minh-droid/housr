@@ -1,10 +1,12 @@
 @import "tailwindcss";
 
 :root {
-  --background: #F8FAF9;
+  /* Light Mode - Pure White Base */
+  --background: #FFFFFF;
   --foreground: #1E1E1E;
   --card-bg: #FFFFFF;
   --border: #E5EAE8;
+  --sidebar-bg: #F8FAFB;
   --primary: #204E3A;
   --primary-hover: #2a6449;
   --primary-light: #3B6B4C;
@@ -17,12 +19,14 @@
 }
 
 .dark {
-  --background: #0A0D0B;
+  /* Dark Mode - Deep Navy/Charcoal Dashboard Style */
+  --background: #0F1210;
   --foreground: #E8EDE9;
-  --card-bg: #0F1210;
-  --border: #1A1D1B;
+  --card-bg: #1A1F1C;
+  --border: #2A2F2C;
+  --sidebar-bg: #0A0D0B;
   --primary-hover: #3B6B4C;
-  --surface: #0F1210;
+  --surface: #1A1F1C;
 }
 
 @theme inline {
@@ -34,8 +38,9 @@
   --color-primary-dark: var(--primary-dark);
   --color-surface: var(--surface);
   --color-border: var(--border);
+  --color-sidebar-bg: var(--sidebar-bg);
   --color-surface-light: #FFFFFF;
-  --color-surface-dark: #0F1210;
+  --color-surface-dark: #1A1F1C;
   --color-text-light: #1E1E1E;
   --color-text-dark: #E8EDE9;
   --font-sans: var(--font-geist-sans);
