@@ -149,6 +149,11 @@ export default function TenantRentPlanPage() {
         <Alert type={alert.type} message={alert.message} onClose={() => setAlert(null)} />
       )}
 
+      {/* Pending Rent Plan Requests */}
+      <div className="bg-card-bg rounded-2xl border border-border p-6 shadow-sm mb-6">
+        <PendingRentPlans />
+      </div>
+
       {/* Active Rent Plan */}
       {activePlan && (
         <div className="bg-gradient-to-br from-primary/10 to-primary-light/10 dark:from-primary/20 dark:to-primary-light/20 border-2 border-primary dark:border-primary-light rounded-2xl p-6 shadow-xl">
