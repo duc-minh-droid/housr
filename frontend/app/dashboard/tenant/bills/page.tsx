@@ -23,10 +23,8 @@ export default function TenantBillsPage() {
       setAlert({ type: 'success', message: 'Payment successful! Points have been added to your account.' });
       // Clean URL
       window.history.replaceState({}, '', '/dashboard/tenant/bills');
-      // Force reload bills after successful payment with a slight delay to ensure webhook processed
-      setTimeout(() => {
-        loadBills();
-      }, 1000);
+      // Immediately reload bills (payment already processed on backend)
+      loadBills();
     } else if (isCancelled) {
       setAlert({ type: 'error', message: 'Payment was cancelled.' });
       // Clean URL
