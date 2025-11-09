@@ -14,18 +14,27 @@ export default function TenantBillsPage() {
   const [alert, setAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   useEffect(() => {
-    loadBills();
-    
-    // Check for payment success/cancellation from URL params
+    // Check for payment success/cancellation from URL params first
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('success') === 'true') {
+    const isSuccess = urlParams.get('success') === 'true';
+    const isCancelled = urlParams.get('cancelled') === 'true';
+    
+    if (isSuccess) {
       setAlert({ type: 'success', message: 'Payment successful! Points have been added to your account.' });
       // Clean URL
       window.history.replaceState({}, '', '/dashboard/tenant/bills');
-    } else if (urlParams.get('cancelled') === 'true') {
+      // Force reload bills after successful payment with a slight delay to ensure webhook processed
+      setTimeout(() => {
+        loadBills();
+      }, 1000);
+    } else if (isCancelled) {
       setAlert({ type: 'error', message: 'Payment was cancelled.' });
       // Clean URL
       window.history.replaceState({}, '', '/dashboard/tenant/bills');
+      loadBills();
+    } else {
+      // Normal load
+      loadBills();
     }
   }, [user]);
 
