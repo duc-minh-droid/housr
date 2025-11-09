@@ -84,7 +84,7 @@ export function Sidebar({ role }: SidebarProps) {
           width: isCollapsed ? '80px' : '288px'
         }}
         transition={{ duration: 0.3, type: "spring" }}
-        className="fixed left-0 top-0 h-screen bg-sidebar-bg border-r border-gray-200 dark:border-border flex flex-col z-50 shadow-lg"
+        className="fixed left-0 top-0 h-screen bg-sidebar-bg border-r border-border flex flex-col z-50 shadow-lg"
       >
         {/* Toggle Button */}
         <motion.button
@@ -97,7 +97,7 @@ export function Sidebar({ role }: SidebarProps) {
         </motion.button>
 
         {/* Header */}
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div className="p-6 border-b border-border flex-shrink-0">
           <motion.div 
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
@@ -185,7 +185,7 @@ export function Sidebar({ role }: SidebarProps) {
         </nav>
 
         {/* User info and logout - Fixed at bottom */}
-        <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+        <div className="p-4 border-t border-border flex-shrink-0">
           {/* Theme Toggle */}
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -228,7 +228,7 @@ export function Sidebar({ role }: SidebarProps) {
                   <motion.div 
                     initial={{ scale: 0.9 }}
                     animate={{ scale: 1 }}
-                    className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600 flex items-center justify-between"
+                    className="mt-3 pt-3 border-t border-border flex items-center justify-between"
                   >
                     <div>
                       <p className="text-xs text-gray-600 dark:text-gray-400">Reward Points</p>
