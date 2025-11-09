@@ -161,9 +161,9 @@ export default function LandlordRentPlansPage() {
           <p className="text-sm font-semibold text-blue-800 dark:text-blue-300">Awaiting Payment</p>
           <p className="text-4xl font-bold text-blue-600 dark:text-blue-400 mt-2">{acceptedPlans.length}</p>
         </div>
-        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 border border-emerald-200 dark:border-emerald-800 rounded-xl p-5">
-          <p className="text-sm font-semibold text-emerald-800 dark:text-emerald-300">Completed</p>
-          <p className="text-4xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">{completedPlans.length}</p>
+        <div className="bg-gradient-to-br from-primary/10 to-primary-light/10 dark:from-primary/20 dark:to-primary-light/20 border border-primary dark:border-primary-light rounded-xl p-5">
+          <p className="text-sm font-semibold text-primary dark:text-primary-light">Completed</p>
+          <p className="text-4xl font-bold text-primary dark:text-primary-light mt-2">{completedPlans.length}</p>
         </div>
         <div className="bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border border-red-200 dark:border-red-800 rounded-xl p-5">
           <p className="text-sm font-semibold text-red-800 dark:text-red-300">Rejected</p>
@@ -225,7 +225,7 @@ export default function LandlordRentPlansPage() {
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="flex items-center gap-2">
-                    <DollarSign className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                    <DollarSign className="w-5 h-5 text-primary dark:text-primary-light" />
                     <div>
                       <p className="text-xs text-gray-600 dark:text-gray-400">Monthly Rent</p>
                       <p className="text-lg font-bold text-gray-900 dark:text-white">
@@ -285,7 +285,7 @@ export default function LandlordRentPlansPage() {
               value={selectedTenant}
               onChange={(e) => setSelectedTenant(e.target.value)}
               required
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white"
             >
               <option value="">Choose a tenant...</option>
               {tenants.map((tenant) => (
@@ -308,7 +308,7 @@ export default function LandlordRentPlansPage() {
                 value={monthlyRent}
                 onChange={(e) => setMonthlyRent(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white"
                 placeholder="0.00"
               />
             </div>
@@ -324,7 +324,7 @@ export default function LandlordRentPlansPage() {
                 value={deposit}
                 onChange={(e) => setDeposit(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white"
                 placeholder="0.00"
               />
             </div>
@@ -341,7 +341,7 @@ export default function LandlordRentPlansPage() {
                 value={duration}
                 onChange={(e) => setDuration(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white"
                 placeholder="12"
               />
             </div>
@@ -354,7 +354,7 @@ export default function LandlordRentPlansPage() {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:bg-gray-700 dark:text-white"
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white"
               />
             </div>
           </div>
@@ -367,7 +367,7 @@ export default function LandlordRentPlansPage() {
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-emerald-500 dark:bg-gray-700 dark:text-white"
+              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-primary dark:bg-gray-700 dark:text-white"
               placeholder="Add any additional notes about this rental agreement..."
             />
           </div>

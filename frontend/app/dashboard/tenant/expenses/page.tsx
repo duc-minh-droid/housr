@@ -202,7 +202,7 @@ export default function ExpensesPage() {
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value as Period)}
-            className="pl-4 pr-10 py-2.5 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-lg font-semibold text-gray-900 dark:text-white appearance-none cursor-pointer hover:border-emerald-400 dark:hover:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all shadow-sm"
+            className="pl-4 pr-10 py-2.5 bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-lg font-semibold text-gray-900 dark:text-white appearance-none cursor-pointer hover:border-primary dark:hover:border-primary-light focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm"
           >
             <option value="week">Weekly</option>
             <option value="month">Monthly</option>
@@ -213,16 +213,16 @@ export default function ExpensesPage() {
       </div>
 
       {/* Summary Stats */}
-      <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 rounded-2xl border border-emerald-200 dark:border-emerald-800 p-6 shadow-lg shadow-emerald-500/10">
+      <div className="bg-gradient-to-br from-primary/10 to-primary-light/10 dark:from-primary/20 dark:to-primary-light/20 rounded-2xl border border-primary dark:border-primary-light p-6 shadow-lg shadow-primary/10">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-semibold text-emerald-800 dark:text-emerald-300 uppercase tracking-wide">
+            <h2 className="text-sm font-semibold text-primary dark:text-primary-light uppercase tracking-wide">
               This {periodLabel}'s Expenses
             </h2>
-            <p className="text-4xl font-bold text-emerald-600 dark:text-emerald-400 mt-2">
+            <p className="text-4xl font-bold text-primary dark:text-primary-light mt-2">
               {formatCurrency(totalSpent)}
             </p>
-            <p className="text-sm text-emerald-700 dark:text-emerald-300 mt-1">
+            <p className="text-sm text-primary-light dark:text-primary-light mt-1">
               {(Array.isArray(summary?.expensesByCategory) 
                 ? summary.expensesByCategory.reduce((sum, cat) => sum + (cat.count || 0), 0)
                 : expenses.length) || 0} expense(s) logged
@@ -231,7 +231,7 @@ export default function ExpensesPage() {
           {/* Only show budget summary in header for monthly view */}
           {budget && period === 'month' && (
             <div className="text-right">
-              <p className="text-sm text-emerald-700 dark:text-emerald-300">Monthly Budget</p>
+              <p className="text-sm text-primary-light dark:text-primary-light">Monthly Budget</p>
               <p className="text-2xl font-bold text-emerald-900 dark:text-emerald-200 mt-1">
                 {formatCurrency(budget.amount)}
               </p>

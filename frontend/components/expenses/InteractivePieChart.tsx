@@ -20,7 +20,7 @@ const CATEGORY_COLORS: { [key: string]: string } = {
   Transportation: '#3b82f6',
   Entertainment: '#a855f7',
   Healthcare: '#ef4444',
-  Shopping: '#2a5335',
+  Shopping: '#204E3A',
   Utilities: '#eab308',
   Other: '#6b7280',
 };

@@ -150,22 +150,22 @@ export default function TenantRentPlanPage() {
 
       {/* Active Rent Plan */}
       {activePlan && (
-        <div className="bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/20 dark:to-emerald-800/20 border-2 border-emerald-500 dark:border-emerald-700 rounded-2xl p-6 shadow-xl">
+        <div className="bg-gradient-to-br from-primary/10 to-primary-light/10 dark:from-primary/20 dark:to-primary-light/20 border-2 border-primary dark:border-primary-light rounded-2xl p-6 shadow-xl">
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-emerald-600 rounded-2xl flex items-center justify-center">
+              <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center">
                 <Home className="w-7 h-7 text-white" />
               </div>
               <div>
-                <h2 className="text-2xl font-bold text-emerald-900 dark:text-emerald-100">
+                <h2 className="text-2xl font-bold text-primary dark:text-primary-light">
                   Active Rental Agreement
                 </h2>
-                <p className="text-sm text-emerald-700 dark:text-emerald-300">
+                <p className="text-sm text-primary-light dark:text-primary-light">
                   with {activePlan.landlord?.name || 'Landlord'}
                 </p>
               </div>
             </div>
-            <span className="px-4 py-2 bg-emerald-600 text-white rounded-full text-sm font-bold shadow-lg flex items-center gap-2">
+            <span className="px-4 py-2 bg-primary text-white rounded-full text-sm font-bold shadow-lg flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
               Active
             </span>
@@ -174,12 +174,12 @@ export default function TenantRentPlanPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
             <div className="bg-white/60 dark:bg-gray-900/20 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-2">
-                <DollarSign className="w-5 h-5 text-emerald-600" />
-                <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+                <DollarSign className="w-5 h-5 text-primary" />
+                <p className="text-xs font-semibold text-primary dark:text-primary-light">
                   Monthly Rent
                 </p>
               </div>
-              <p className="text-2xl font-bold text-emerald-900 dark:text-white">
+              <p className="text-2xl font-bold text-primary dark:text-white">
                 {formatCurrency(activePlan.monthlyRent)}
               </p>
             </div>
@@ -187,11 +187,11 @@ export default function TenantRentPlanPage() {
             <div className="bg-white/60 dark:bg-gray-900/20 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-2">
                 <DollarSign className="w-5 h-5 text-blue-600" />
-                <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+                <p className="text-xs font-semibold text-primary dark:text-primary-light">
                   Deposit Paid
                 </p>
               </div>
-              <p className="text-2xl font-bold text-emerald-900 dark:text-white">
+              <p className="text-2xl font-bold text-primary dark:text-white">
                 {formatCurrency(activePlan.deposit)}
               </p>
             </div>
@@ -199,11 +199,11 @@ export default function TenantRentPlanPage() {
             <div className="bg-white/60 dark:bg-gray-900/20 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Clock className="w-5 h-5 text-purple-600" />
-                <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+                <p className="text-xs font-semibold text-primary dark:text-primary-light">
                   Duration
                 </p>
               </div>
-              <p className="text-2xl font-bold text-emerald-900 dark:text-white">
+              <p className="text-2xl font-bold text-primary dark:text-white">
                 {activePlan.duration} mo
               </p>
             </div>
@@ -211,11 +211,11 @@ export default function TenantRentPlanPage() {
             <div className="bg-white/60 dark:bg-gray-900/20 rounded-xl p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Calendar className="w-5 h-5 text-orange-600" />
-                <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+                <p className="text-xs font-semibold text-primary dark:text-primary-light">
                   Started
                 </p>
               </div>
-              <p className="text-sm font-bold text-emerald-900 dark:text-white">
+              <p className="text-sm font-bold text-primary dark:text-white">
                 {formatDate(activePlan.completedDate || activePlan.proposedDate)}
               </p>
             </div>
@@ -223,13 +223,13 @@ export default function TenantRentPlanPage() {
 
           {activePlan.description && (
             <div className="mt-4 p-3 bg-white/60 dark:bg-gray-900/20 rounded-lg">
-              <p className="text-sm text-emerald-900 dark:text-emerald-100">
+              <p className="text-sm text-primary dark:text-primary-light">
                 <strong>Note:</strong> {activePlan.description}
               </p>
             </div>
           )}
 
-          <div className="mt-4 flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300">
+          <div className="mt-4 flex items-center gap-2 text-sm text-primary-light dark:text-primary-light">
             <Sparkles className="w-4 h-4" />
             <span>
               <strong>Pro Tip:</strong> Pay your rent on time to earn reward points!
@@ -286,7 +286,7 @@ export default function TenantRentPlanPage() {
                     <p className="text-xs text-gray-600 dark:text-gray-400">
                       Deposit (Due Now)
                     </p>
-                    <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                    <p className="text-xl font-bold text-primary dark:text-primary-light">
                       {formatCurrency(plan.deposit)}
                     </p>
                   </div>
