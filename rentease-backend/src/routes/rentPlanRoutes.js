@@ -1,19 +1,31 @@
 import { Router } from 'express';
+import express from 'express';
 import {
-    approveRentPlan,
     getRentPlans,
+    createRentPlan,
+    acceptRentPlan,
     rejectRentPlan,
-    submitRentPlan,
+    cancelRentPlan,
+    handleStripeWebhook,
 } from '../controllers/rentPlanController.js';
 import { authenticate } from '../middleware/auth.js';
 
 const router = Router();
 
+// Webhook route must be BEFORE express.json() middleware and authentication
+router.post(
+    '/stripe/webhook',
+    express.raw({ type: 'application/json' }),
+    handleStripeWebhook
+);
+
+// All other routes require authentication
 router.use(authenticate);
 
 router.get('/', getRentPlans);
-router.post('/', submitRentPlan);
-router.post('/:planId/approve', approveRentPlan);
-router.post('/:planId/reject', rejectRentPlan);
+router.post('/', createRentPlan);              // Landlord creates plan
+router.post('/:planId/accept', acceptRentPlan); // Tenant accepts and pays
+router.post('/:planId/reject', rejectRentPlan); // Tenant rejects
+router.delete('/:planId', cancelRentPlan);      // Landlord cancels
 
 export default router;

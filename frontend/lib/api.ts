@@ -338,12 +338,19 @@ export const rentPlansApi = {
     return data.plans || data;
   },
   
+  // Landlord creates a rent plan for a tenant
   createPlan: async (planData: {
-    landlordId: string;
+    tenantId: string;
     monthlyRent: number;
     deposit: number;
     duration: number;
+    description?: string;
+    startDate?: string;
   }) => {
+    if (isCurrentUserMock()) {
+      return mockRentPlansApi.createPlan(planData);
+    }
+    
     const data = await fetchWithAuth('/api/rent-plans', {
       method: 'POST',
       body: JSON.stringify(planData),
@@ -351,25 +358,40 @@ export const rentPlansApi = {
     return data.plan || data;
   },
   
-  updatePlanStatus: async (planId: string, status: 'approved' | 'rejected') => {
-    // Use mock API for mock users
+  // Tenant accepts a rent plan and initiates payment
+  acceptPlan: async (planId: string) => {
     if (isCurrentUserMock()) {
-      return mockRentPlansApi.updatePlanStatus(planId, status);
+      return mockRentPlansApi.acceptPlan(planId);
     }
     
-    const endpoint = status === 'approved' ? 'approve' : 'reject';
-    const data = await fetchWithAuth(`/api/rent-plans/${planId}/${endpoint}`, {
+    const data = await fetchWithAuth(`/api/rent-plans/${planId}/accept`, {
+      method: 'POST',
+    });
+    return data; // { sessionUrl, sessionId }
+  },
+  
+  // Tenant rejects a rent plan
+  rejectPlan: async (planId: string) => {
+    if (isCurrentUserMock()) {
+      return mockRentPlansApi.rejectPlan(planId);
+    }
+    
+    const data = await fetchWithAuth(`/api/rent-plans/${planId}/reject`, {
       method: 'POST',
     });
     return data.plan || data;
   },
   
-  approvePlan: async (planId: string) => {
-    return rentPlansApi.updatePlanStatus(planId, 'approved');
-  },
-  
-  rejectPlan: async (planId: string) => {
-    return rentPlansApi.updatePlanStatus(planId, 'rejected');
+  // Landlord cancels a rent plan
+  cancelPlan: async (planId: string) => {
+    if (isCurrentUserMock()) {
+      return mockRentPlansApi.cancelPlan(planId);
+    }
+    
+    const data = await fetchWithAuth(`/api/rent-plans/${planId}`, {
+      method: 'DELETE',
+    });
+    return data.plan || data;
   },
 };
 
