@@ -12,6 +12,8 @@ interface BudgetCircleProps {
   onEditClick: () => void;
   onAllocateClick?: () => void;
   hasAllocation?: boolean;
+  daysCompleted?: number;
+  pointsAwarded?: boolean;
 }
 
 // Calculate potential points based on budget adherence
@@ -27,12 +29,13 @@ const calculatePotentialPoints = (spent: number, budget: number, period: string)
   return period === 'month' ? 25 : 10; // Just under
 };
 
-export function BudgetCircle({ spent, budget, period, onEditClick, onAllocateClick, hasAllocation }: BudgetCircleProps) {
+export function BudgetCircle({ spent, budget, period, onEditClick, onAllocateClick, hasAllocation, daysCompleted = 0, pointsAwarded = false }: BudgetCircleProps) {
   const hasBudget = budget !== null && budget > 0;
   const percentage = hasBudget ? Math.min((spent / budget) * 100, 100) : 0;
   const overBudget = hasBudget && spent > budget;
   const remaining = hasBudget ? Math.max(budget - spent, 0) : null;
   const potentialPoints = hasBudget ? calculatePotentialPoints(spent, budget, period) : 0;
+  const daysRemaining = Math.max(30 - daysCompleted, 0);
 
   // Color based on percentage
   const getColor = () => {
@@ -50,8 +53,57 @@ export function BudgetCircle({ spent, budget, period, onEditClick, onAllocateCli
 
   return (
     <div className="flex flex-col items-center gap-3 p-4">
+      {/* 30-Day Challenge Banner */}
+      {hasBudget && period === 'month' && !pointsAwarded && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full bg-gradient-to-r from-primary/20 to-primary-light/20 border border-primary/30 rounded-lg p-2.5 text-center"
+        >
+          <div className="flex items-center justify-center gap-1.5 mb-1">
+            <Sparkles className="w-4 h-4 text-primary-light" />
+            <span className="text-sm font-bold text-primary-light">
+              30-Day Challenge
+            </span>
+          </div>
+          <div className="bg-white/10 rounded-full h-2 mb-1.5">
+            <motion.div 
+              className="bg-primary-light h-full rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: `${(daysCompleted / 30) * 100}%` }}
+              transition={{ duration: 0.8 }}
+            />
+          </div>
+          <p className="text-xs font-bold text-primary-light">
+            Day {daysCompleted} of 30
+          </p>
+          <p className="text-[9px] text-primary-light/80 mt-0.5">
+            {daysRemaining > 0 ? `${daysRemaining} days to earn 100 points!` : '🎉 Challenge Complete!'}
+          </p>
+        </motion.div>
+      )}
+      
+      {/* Points Awarded Banner */}
+      {pointsAwarded && (
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          className="w-full bg-gradient-to-r from-green-500/20 to-green-600/20 border border-green-500/30 rounded-lg p-2.5 text-center"
+        >
+          <div className="flex items-center justify-center gap-1.5">
+            <Sparkles className="w-4 h-4 text-green-400" />
+            <span className="text-sm font-bold text-green-400">
+              🎉 100 Points Earned!
+            </span>
+          </div>
+          <p className="text-[9px] text-green-400/80 mt-0.5">
+            30-day challenge completed!
+          </p>
+        </motion.div>
+      )}
+      
       {/* Points Incentive Banner */}
-      {hasBudget && !overBudget && potentialPoints > 0 && (
+      {hasBudget && !overBudget && potentialPoints > 0 && !pointsAwarded && period !== 'month' && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
