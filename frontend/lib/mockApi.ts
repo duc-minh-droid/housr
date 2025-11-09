@@ -246,12 +246,17 @@ export const mockRentPlansApi = {
     const user = getCurrentMockUser();
     if (!user) throw new Error('Not authenticated');
     
-    return mockRentPlans.filter(plan => plan.tenantId === user.id);
+    // Tenants see plans proposed to them, landlords see plans they created
+    return mockRentPlans.filter(plan => 
+      user.role === 'tenant' ? plan.tenantId === user.id : plan.landlordId === user.id
+    );
   },
   
   getTenantPlan: async () => {
     const plans = await mockRentPlansApi.getRentPlans();
-    return plans.length > 0 ? plans[0] : null;
+    // Return first completed plan for tenant
+    const completedPlan = plans.find(p => p.status === 'completed');
+    return completedPlan || (plans.length > 0 ? plans[0] : null);
   },
   
   getLandlordPlans: async () => {
@@ -264,20 +269,99 @@ export const mockRentPlansApi = {
     return mockRentPlans.filter(plan => plan.landlordId === user.id);
   },
   
-  updatePlanStatus: async (planId: string, status: 'approved' | 'rejected') => {
+  // Landlord creates a new rent plan for a tenant
+  createPlan: async (planData: {
+    tenantId: string;
+    monthlyRent: number;
+    deposit: number;
+    duration: number;
+    description?: string;
+    startDate?: string;
+  }) => {
     await delay();
     const user = getCurrentMockUser();
     if (!user) throw new Error('Not authenticated');
     
-    if (user.role !== 'landlord') throw new Error('Unauthorized');
+    if (user.role !== 'landlord') throw new Error('Only landlords can create rent plans');
+    
+    const newPlan: RentPlan = {
+      id: `mock-plan-${Date.now()}`,
+      tenantId: planData.tenantId,
+      landlordId: user.id,
+      monthlyRent: planData.monthlyRent,
+      deposit: planData.deposit,
+      duration: planData.duration,
+      status: 'pending',
+      proposedDate: new Date().toISOString(),
+      reviewedDate: null,
+    };
+    
+    mockRentPlans.push(newPlan);
+    return newPlan;
+  },
+  
+  // Tenant accepts a rent plan (simulates Stripe payment for mock users)
+  acceptPlan: async (planId: string) => {
+    await delay(800); // Simulate payment processing
+    const user = getCurrentMockUser();
+    if (!user) throw new Error('Not authenticated');
+    
+    if (user.role !== 'tenant') throw new Error('Only tenants can accept rent plans');
     
     const plan = mockRentPlans.find(p => p.id === planId);
     if (!plan) throw new Error('Plan not found');
+    if (plan.tenantId !== user.id) throw new Error('Unauthorized');
+    if (plan.status !== 'pending') throw new Error('Plan already reviewed');
     
-    plan.status = status;
+    // Simulate successful payment and update plan
+    plan.status = 'completed';
+    plan.reviewedDate = new Date().toISOString();
+    
+    // For mock users, return a fake session URL (frontend will handle mock flow)
+    return {
+      sessionUrl: '/dashboard/tenant/rent-plan?mock=true&success=true&planId=' + planId,
+      sessionId: 'mock_session_' + Date.now(),
+    };
+  },
+  
+  // Tenant rejects a rent plan
+  rejectPlan: async (planId: string) => {
+    await delay();
+    const user = getCurrentMockUser();
+    if (!user) throw new Error('Not authenticated');
+    
+    if (user.role !== 'tenant') throw new Error('Only tenants can reject rent plans');
+    
+    const plan = mockRentPlans.find(p => p.id === planId);
+    if (!plan) throw new Error('Plan not found');
+    if (plan.tenantId !== user.id) throw new Error('Unauthorized');
+    if (plan.status !== 'pending') throw new Error('Plan already reviewed');
+    
+    plan.status = 'rejected';
     plan.reviewedDate = new Date().toISOString();
     
     return plan;
+  },
+  
+  // Landlord cancels a rent plan
+  cancelPlan: async (planId: string) => {
+    await delay();
+    const user = getCurrentMockUser();
+    if (!user) throw new Error('Not authenticated');
+    
+    if (user.role !== 'landlord') throw new Error('Only landlords can cancel rent plans');
+    
+    const plan = mockRentPlans.find(p => p.id === planId);
+    if (!plan) throw new Error('Plan not found');
+    if (plan.landlordId !== user.id) throw new Error('Unauthorized');
+    if (plan.status === 'completed') throw new Error('Cannot cancel completed plan');
+    
+    const index = mockRentPlans.findIndex(p => p.id === planId);
+    if (index > -1) {
+      mockRentPlans.splice(index, 1);
+    }
+    
+    return { success: true };
   },
 };
 
