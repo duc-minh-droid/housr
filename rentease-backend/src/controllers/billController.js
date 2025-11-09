@@ -142,16 +142,56 @@ export const payBill = asyncHandler(async (req, res) => {
         cancel_url: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/dashboard/tenant/bills?cancelled=true`,
     });
 
-    // Store session ID with bill for tracking
-    await prisma.bill.update({
-        where: { id: billId },
-        data: {
-            stripeSessionId: session.id,
-        },
-    });
+    // IMMEDIATELY mark bill as paid (for demo/testing - no webhook wait)
+    const paidDate = new Date();
+    const isOnTime = paidDate <= bill.dueDate;
+    const pointsEarned = isOnTime ? Math.max(0, Math.round(bill.amount * 0.1)) : 0;
+
+    console.log(`💳 Immediately processing bill payment for ${bill.id}`);
+    console.log(`📝 Payment details: paidDate=${paidDate.toISOString()}, isOnTime=${isOnTime}, pointsEarned=${pointsEarned}`);
+
+    const operations = [
+        prisma.bill.update({
+            where: { id: billId },
+            data: {
+                isPaid: true,
+                paidDate,
+                stripeSessionId: session.id,
+            },
+        }),
+    ];
+
+    if (pointsEarned > 0) {
+        operations.push(
+            prisma.reward.create({
+                data: {
+                    tenantId: req.user.id,
+                    billId: bill.id,
+                    amount: bill.amount,
+                    date: paidDate,
+                    isOnTime,
+                    pointsEarned,
+                },
+            }),
+            prisma.user.update({
+                where: { id: req.user.id },
+                data: {
+                    points: {
+                        increment: pointsEarned,
+                    },
+                },
+            }),
+        );
+    }
+
+    await prisma.$transaction(operations);
+
+    console.log(`✅ Bill ${billId} immediately marked as paid. Points earned: ${pointsEarned}`);
 
     res.json({ 
         sessionUrl: session.url,
         sessionId: session.id,
+        paid: true,
+        pointsEarned,
     });
 });
