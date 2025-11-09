@@ -17,7 +17,8 @@ import {
   Menu,
   X,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  MessageCircle
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useState, useEffect } from 'react';
@@ -38,18 +39,19 @@ export function Sidebar({ role }: SidebarProps) {
   };
 
   const tenantLinks = [
-    { href: '/dashboard/tenant', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/dashboard/tenant/bills', label: 'Bills', icon: Receipt },
-    { href: '/dashboard/tenant/expenses', label: 'Expenses', icon: Wallet },
-    { href: '/dashboard/tenant/rent-plan', label: 'Rent Plan', icon: Home },
-    { href: '/dashboard/tenant/shop', label: 'Rewards', icon: Gift },
+    { href: '/dashboard/tenant', label: 'Dashboard', icon: LayoutDashboard, badge: null },
+    { href: '/dashboard/tenant/bills', label: 'Bills', icon: Receipt, badge: null },
+    { href: '/dashboard/tenant/expenses', label: 'Expenses', icon: Wallet, badge: null },
+    { href: '/dashboard/tenant/rent-plan', label: 'Rent Plan', icon: Home, badge: null },
+    { href: '/dashboard/tenant/shop', label: 'Rewards', icon: Gift, badge: null },
+    { href: '/dashboard/tenant/ai-chat', label: 'AI Chat', icon: MessageCircle, badge: 'BETA' },
   ];
 
   const landlordLinks = [
-    { href: '/dashboard/landlord', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/dashboard/landlord/tenants', label: 'Tenants', icon: Users },
-    { href: '/dashboard/landlord/bills', label: 'Bills', icon: Receipt },
-    { href: '/dashboard/landlord/rent-plans', label: 'Plans', icon: FileText },
+    { href: '/dashboard/landlord', label: 'Dashboard', icon: LayoutDashboard, badge: null },
+    { href: '/dashboard/landlord/tenants', label: 'Tenants', icon: Users, badge: null },
+    { href: '/dashboard/landlord/bills', label: 'Bills', icon: Receipt, badge: null },
+    { href: '/dashboard/landlord/rent-plans', label: 'Plans', icon: FileText, badge: null },
   ];
 
   const links = role === 'tenant' ? tenantLinks : landlordLinks;
@@ -150,13 +152,22 @@ export function Sidebar({ role }: SidebarProps) {
                         animate={{ opacity: 1, width: 'auto' }}
                         exit={{ opacity: 0, width: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="font-medium whitespace-nowrap"
+                        className="font-medium whitespace-nowrap flex items-center gap-2"
                       >
                         {link.label}
+                        {link.badge && (
+                          <motion.span
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="px-1.5 py-0.5 bg-gradient-to-r from-yellow-400 to-orange-400 text-yellow-900 text-[10px] font-bold rounded uppercase tracking-wide"
+                          >
+                            {link.badge}
+                          </motion.span>
+                        )}
                       </motion.span>
                     )}
                   </AnimatePresence>
-                  {isActive && !isCollapsed && (
+                  {isActive && !isCollapsed && !link.badge && (
                     <motion.div
                       layoutId="activeIndicator"
                       className="ml-auto w-2 h-2 rounded-full bg-white flex-shrink-0"
