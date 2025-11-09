@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "RentEase - Rental Management Platform",
-  description: "Transparent rental management for tenants and landlords",
+  title: "Financr - Smart Financial Management Platform",
+  description: "Streamline your finances with intelligent tracking, budgeting, and automated insights for modern living.",
 };
 
 export default function RootLayout({
@@ -24,9 +24,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning className="dark">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background-light dark:bg-background-dark text-text-light dark:text-text-dark`}
       >
         <AuthProvider>
           {children}
