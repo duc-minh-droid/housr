@@ -282,7 +282,13 @@ export const mockRentPlansApi = {
 };
 
 // Mock Budget API
-const mockBudgets = new Map<string, { period: string; amount: number }>();
+interface MockBudgetData {
+  period: string;
+  amount: number;
+  categoryAllocations?: Array<{ category: string; percentage: number; amount: number }>;
+}
+
+const mockBudgets = new Map<string, MockBudgetData>();
 
 export const mockBudgetApi = {
   getBudget: async (period: 'week' | 'month' | 'all') => {
@@ -291,14 +297,23 @@ export const mockBudgetApi = {
     if (!user) throw new Error('Not authenticated');
     
     const key = `${user.id}-${period}`;
-    const budget = mockBudgets.get(key);
+    const budgetData = mockBudgets.get(key);
     
     return {
-      budget: budget ? {
+      budget: budgetData ? {
         id: key,
         tenantId: user.id,
         period,
-        amount: budget.amount,
+        amount: budgetData.amount,
+        categoryBudgets: budgetData.categoryAllocations?.map((ca, idx) => ({
+          id: `cat-${key}-${idx}`,
+          budgetId: key,
+          category: ca.category,
+          percentage: ca.percentage,
+          amount: ca.amount,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        })),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       } : null,
@@ -306,13 +321,17 @@ export const mockBudgetApi = {
     };
   },
   
-  updateBudget: async (period: 'week' | 'month' | 'all', amount: number) => {
+  updateBudget: async (
+    period: 'week' | 'month' | 'all',
+    amount: number,
+    categoryAllocations?: Array<{ category: string; percentage: number; amount: number }>
+  ) => {
     await delay();
     const user = getCurrentMockUser();
     if (!user) throw new Error('Not authenticated');
     
     const key = `${user.id}-${period}`;
-    mockBudgets.set(key, { period, amount });
+    mockBudgets.set(key, { period, amount, categoryAllocations });
     
     return {
       budget: {
@@ -320,6 +339,15 @@ export const mockBudgetApi = {
         tenantId: user.id,
         period,
         amount,
+        categoryBudgets: categoryAllocations?.map((ca, idx) => ({
+          id: `cat-${key}-${idx}`,
+          budgetId: key,
+          category: ca.category,
+          percentage: ca.percentage,
+          amount: ca.amount,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        })),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       },

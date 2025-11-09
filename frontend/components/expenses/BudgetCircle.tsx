@@ -10,6 +10,8 @@ interface BudgetCircleProps {
   budget: number | null;
   period: 'week' | 'month' | 'all';
   onEditClick: () => void;
+  onAllocateClick?: () => void;
+  hasAllocation?: boolean;
 }
 
 // Calculate potential points based on budget adherence
@@ -25,7 +27,7 @@ const calculatePotentialPoints = (spent: number, budget: number, period: string)
   return period === 'month' ? 25 : 10; // Just under
 };
 
-export function BudgetCircle({ spent, budget, period, onEditClick }: BudgetCircleProps) {
+export function BudgetCircle({ spent, budget, period, onEditClick, onAllocateClick, hasAllocation }: BudgetCircleProps) {
   const hasBudget = budget !== null && budget > 0;
   const percentage = hasBudget ? Math.min((spent / budget) * 100, 100) : 0;
   const overBudget = hasBudget && spent > budget;
@@ -141,14 +143,30 @@ export function BudgetCircle({ spent, budget, period, onEditClick }: BudgetCircl
         )}
       </div>
 
-      <button
-        onClick={onEditClick}
-        className="w-full px-3 py-2 text-xs font-semibold text-white bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-1.5"
-      >
-        <Settings className="w-3.5 h-3.5" />
-        {hasBudget ? 'Edit Budget' : 'Set Budget'}
-      </button>
-    </div>
-  );
-}
+              <div className="w-full space-y-2">
+                <button
+                  onClick={onEditClick}
+                  className="w-full px-3 py-2 text-xs font-semibold text-white bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-1.5"
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                  {hasBudget ? 'Edit Budget' : 'Set Budget'}
+                </button>
+                
+                {hasBudget && onAllocateClick && (
+                  <button
+                    onClick={onAllocateClick}
+                    className={`w-full px-3 py-2 text-xs font-semibold rounded-lg transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-1.5 ${
+                      hasAllocation
+                        ? 'text-white bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600'
+                        : 'text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/20 hover:bg-emerald-100 dark:hover:bg-emerald-900/30 border border-emerald-200 dark:border-emerald-800'
+                    }`}
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    {hasAllocation ? 'Edit Allocation' : 'Allocate Budget'}
+                  </button>
+                )}
+              </div>
+            </div>
+          );
+        }
 

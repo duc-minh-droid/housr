@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Plus, ChevronDown } from 'lucide-react';
 import { useExpenses } from '@/hooks/useExpenses';
 import { BudgetCircle } from '@/components/expenses/BudgetCircle';
+import { BudgetAllocationModal } from '@/components/expenses/BudgetAllocationModal';
 import dynamic from 'next/dynamic';
 import { CategoryCard } from '@/components/expenses/CategoryCard';
 
@@ -13,7 +14,7 @@ const ExpensesChart = dynamic(
   { ssr: false }
 );
 import { Button, Modal, Alert } from '@/components/UIComponents';
-import { expensesApi } from '@/lib/api';
+import { expensesApi, budgetApi } from '@/lib/api';
 import { formatCurrency } from '@/lib/utils';
 import { Period } from '@/types/expenses';
 import { Expense } from '@/types/expenses';
@@ -22,6 +23,7 @@ export default function ExpensesPage() {
   const { period, setPeriod, summary, expenses, budget, isLoading, error, updateBudget, refresh } = useExpenses('month');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isBudgetModalOpen, setIsBudgetModalOpen] = useState(false);
+  const [isAllocationModalOpen, setIsAllocationModalOpen] = useState(false);
   const [alert, setAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   
   // Form state
@@ -94,6 +96,19 @@ export default function ExpensesPage() {
       setAlert({ type: 'error', message: error.message || 'Failed to update budget' });
     } finally {
       setIsUpdatingBudget(false);
+    }
+  };
+
+  const handleAllocationSave = async (allocations: Array<{ category: string; percentage: number; amount: number }>) => {
+    if (!budget) return;
+
+    try {
+      await budgetApi.updateBudget(period, budget.amount, allocations);
+      await refresh();
+      setAlert({ type: 'success', message: 'Budget allocation updated successfully!' });
+    } catch (error: any) {
+      setAlert({ type: 'error', message: error.message || 'Failed to update allocation' });
+      throw error;
     }
   };
 
@@ -245,24 +260,26 @@ export default function ExpensesPage() {
           </div>
         </div>
 
-        {/* Budget Circle - Only visible for Monthly period */}
-        {period === 'month' && (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-lg hover:shadow-xl transition-shadow">
-            <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 text-center">
-              Budget Tracker
-            </h3>
-            <BudgetCircle
-              spent={totalSpent}
-              budget={budget?.amount || null}
-              period={period}
-              onEditClick={() => {
-                setBudgetPeriod(period);
-                setBudgetAmount(budget?.amount?.toString() || '');
-                setIsBudgetModalOpen(true);
-              }}
-            />
-          </div>
-        )}
+                {/* Budget Circle - Only visible for Monthly period */}
+                {period === 'month' && (
+                  <div className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 p-6 shadow-lg hover:shadow-xl transition-shadow">
+                    <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-4 text-center">
+                      Budget Tracker
+                    </h3>
+                    <BudgetCircle
+                      spent={totalSpent}
+                      budget={budget?.amount || null}
+                      period={period}
+                      onEditClick={() => {
+                        setBudgetPeriod(period);
+                        setBudgetAmount(budget?.amount?.toString() || '');
+                        setIsBudgetModalOpen(true);
+                      }}
+                      onAllocateClick={() => setIsAllocationModalOpen(true)}
+                      hasAllocation={budget && (budget as any).categoryBudgets && (budget as any).categoryBudgets.length > 0}
+                    />
+                  </div>
+                )}
       </div>
 
       {/* Categories */}
@@ -440,7 +457,25 @@ export default function ExpensesPage() {
             </Button>
           </div>
         </form>
-      </Modal>
-    </div>
-  );
-}
+              </Modal>
+
+              {/* Budget Allocation Modal */}
+              {budget && budget.amount > 0 && (
+                <BudgetAllocationModal
+                  isOpen={isAllocationModalOpen}
+                  onClose={() => setIsAllocationModalOpen(false)}
+                  totalBudget={budget.amount}
+                  categories={(summary?.expensesByCategory || []).map((cat) => cat.category)}
+                  existingAllocations={
+                    (budget as any).categoryBudgets?.map((cb: any) => ({
+                      category: cb.category,
+                      percentage: cb.percentage,
+                      amount: cb.amount,
+                    })) || []
+                  }
+                  onSave={handleAllocationSave}
+                />
+              )}
+            </div>
+          );
+        }

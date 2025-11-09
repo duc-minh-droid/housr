@@ -32,7 +32,7 @@ export const createOrUpdateBudget = asyncHandler(async (req, res) => {
         throw error;
     }
 
-    const { period, amount } = req.body;
+    const { period, amount, categoryAllocations } = req.body;
 
     if (!period || !['week', 'month', 'all'].includes(period)) {
         const error = new Error('Invalid period. Must be "week", "month", or "all"');
@@ -47,7 +47,17 @@ export const createOrUpdateBudget = asyncHandler(async (req, res) => {
         throw error;
     }
 
-    const budget = await upsertBudget(req.user.id, period, amountValue);
+    // Validate category allocations if provided
+    if (categoryAllocations && Array.isArray(categoryAllocations)) {
+        const totalPercentage = categoryAllocations.reduce((sum, ca) => sum + ca.percentage, 0);
+        if (Math.abs(totalPercentage - 100) > 0.1) {
+            const error = new Error('Category allocations must total 100%');
+            error.status = 400;
+            throw error;
+        }
+    }
+
+    const budget = await upsertBudget(req.user.id, period, amountValue, categoryAllocations);
     
     res.json({ budget });
 });

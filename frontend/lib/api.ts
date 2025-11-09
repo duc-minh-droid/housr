@@ -287,15 +287,19 @@ export const budgetApi = {
     return data;
   },
   
-  updateBudget: async (period: 'week' | 'month' | 'all', amount: number) => {
+  updateBudget: async (
+    period: 'week' | 'month' | 'all',
+    amount: number,
+    categoryAllocations?: Array<{ category: string; percentage: number; amount: number }>
+  ) => {
     // Use mock API for mock users
     if (isCurrentUserMock()) {
-      return mockBudgetApi.updateBudget(period, amount);
+      return mockBudgetApi.updateBudget(period, amount, categoryAllocations);
     }
     
     const data = await fetchWithAuth('/api/budget', {
       method: 'POST',
-      body: JSON.stringify({ period, amount }),
+      body: JSON.stringify({ period, amount, categoryAllocations }),
     });
     return data;
   },
