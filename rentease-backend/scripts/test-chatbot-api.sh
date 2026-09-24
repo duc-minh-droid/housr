@@ -4,8 +4,8 @@
 # Usage: ./test-chatbot-api.sh
 
 BASE_URL="http://localhost:5001/api"
-TENANT_EMAIL="test1@gmail.com"
-TENANT_PASSWORD="test12"
+TENANT_EMAIL="${TENANT_EMAIL:?set TENANT_EMAIL}"
+TENANT_PASSWORD="${TENANT_PASSWORD:?set TENANT_PASSWORD}"
 
 echo "=== RentEase Chatbot API Test ==="
 echo ""

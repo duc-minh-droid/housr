@@ -1,8 +1,6 @@
 import prisma from '../config/db.js';
 import { asyncHandler } from '../utils/errorHandler.js';
-import Stripe from 'stripe';
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+import { stripe } from '../config/stripe.js';
 
 const buildBillInclude = {
     tenant: {

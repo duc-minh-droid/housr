@@ -3,7 +3,9 @@ import { asyncHandler } from '../utils/errorHandler.js';
 import prisma from '../config/db.js';
 
 // Initialize Gemini AI     
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+// Model names get retired over time, so keep it configurable.
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 
 export const analyzeUserFinances = asyncHandler(async (req, res) => {
     // Only tenants can analyze their own finances
@@ -110,7 +112,7 @@ export const analyzeUserFinances = asyncHandler(async (req, res) => {
 
     try {
         // Call Gemini AI - using gemini-1.5-pro
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+        const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
         const result = await model.generateContent(prompt);
         const response = await result.response;
         const analysis = response.text();
@@ -350,7 +352,7 @@ Respond helpfully and naturally. If they ask about their expenses, reference the
 
     try {
         // Call Gemini AI
-        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+        const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
         const result = await model.generateContent(systemPrompt);
         const response = await result.response;
         const aiResponse = response.text();

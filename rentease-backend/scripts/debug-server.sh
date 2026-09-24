@@ -1,4 +1,9 @@
 #!/bin/bash
+# Credentials come from the environment, e.g.
+#   TENANT_EMAIL=you@example.com TENANT_PASSWORD=... ./debug-server.sh
+TENANT_EMAIL="${TENANT_EMAIL:?set TENANT_EMAIL}"
+TENANT_PASSWORD="${TENANT_PASSWORD:?set TENANT_PASSWORD}"
+
 
 # Simple debug script to test if the server and routes are working
 
@@ -15,7 +20,7 @@ echo ""
 echo "2. Testing login..."
 LOGIN_RESPONSE=$(curl -s -X POST "http://localhost:5001/api/auth/login" \
   -H "Content-Type: application/json" \
-  -d '{"email":"test1@gmail.com","password":"test12"}')
+  -d "{\"email\":\"$TENANT_EMAIL\",\"password\":\"$TENANT_PASSWORD\"}")
 echo "Response: $LOGIN_RESPONSE"
 echo ""
 

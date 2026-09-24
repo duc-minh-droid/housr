@@ -1,12 +1,13 @@
 {
   "name": "rentease-backend",
   "version": "1.0.0",
-  "description": "RentEase backend API built with Express and Prisma",
+  "description": "Financr (RentEase) backend API: Express + Prisma + SQLite",
   "type": "module",
   "main": "src/server.js",
   "scripts": {
     "dev": "nodemon src/server.js",
     "start": "node src/server.js",
+    "setup": "prisma migrate deploy && prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:generate": "prisma generate",
     "prisma:studio": "prisma studio"
@@ -14,8 +15,8 @@
   "keywords": [
     "express",
     "prisma",
-    "postgres",
-    "rentease"
+    "rentease",
+    "sqlite"
   ],
   "author": "",
   "license": "MIT",

@@ -1,4 +1,9 @@
 #!/bin/bash
+# Credentials come from the environment, e.g.
+#   TENANT_EMAIL=you@example.com TENANT_PASSWORD=... ./test-ai-analysis.sh
+TENANT_EMAIL="${TENANT_EMAIL:?set TENANT_EMAIL}"
+TENANT_PASSWORD="${TENANT_PASSWORD:?set TENANT_PASSWORD}"
+
 
 # Test AI Financial Analysis Endpoint
 
@@ -13,10 +18,7 @@ echo ""
 echo "1. Logging in as tenant..."
 LOGIN_RESPONSE=$(curl -s -X POST "$BASE_URL/auth/login" \
   -H "Content-Type: application/json" \
-  -d '{
-    "email": "test1@gmail.com",
-    "password": "test12"
-  }')
+  -d "{\"email\":\"$TENANT_EMAIL\",\"password\":\"$TENANT_PASSWORD\"}")
 
 TOKEN=$(echo $LOGIN_RESPONSE | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
 
