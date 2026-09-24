@@ -12,12 +12,29 @@ export default function SignupPage() {
   const router = useRouter();
   const { login } = useAuth();
   const [name, setName] = useState('');
+  const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState<'tenant' | 'landlord'>('tenant');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Auto-generate username suggestion from name
+  const generateUsername = (fullName: string) => {
+    const cleanName = fullName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const prefix = role === 'tenant' ? 't' : 'l';
+    const random = Math.random().toString(36).substring(2, 6);
+    return `${prefix}-${cleanName.substring(0, 8)}-${random}`;
+  };
+
+  // Update username suggestion when name changes
+  const handleNameChange = (value: string) => {
+    setName(value);
+    if (value.trim() && !username) {
+      setUsername(generateUsername(value));
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,16 +50,40 @@ export default function SignupPage() {
       return;
     }
 
+    if (!username.trim()) {
+      setError('Username is required');
+      return;
+    }
+
+    if (username.length < 3) {
+      setError('Username must be at least 3 characters');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      // Split name into first and last name
-      const nameParts = name.trim().split(' ');
-      const firstName = nameParts[0] || '';
-      const lastName = nameParts.slice(1).join(' ') || nameParts[0] || 'User';
-      
-      const response: any = await authApi.signup(firstName, lastName, email, password, role);
-      login(response.token, response.user);
+      const response = await fetch('http://localhost:5001/api/auth/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: name.trim(),
+          username: username.trim(),
+          email: email.trim(),
+          password,
+          role,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Signup failed');
+      }
+
+      const data = await response.json();
+      login(data.token, data.user);
       
       // Redirect based on role
       if (role === 'tenant') {
@@ -160,12 +201,33 @@ export default function SignupPage() {
                   id="name"
                   type="text"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  onChange={(e) => handleNameChange(e.target.value)}
                   required
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900"
                   placeholder="John Doe"
                 />
               </div>
+            </div>
+
+            <div>
+              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-2">
+                Username
+              </label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input
+                  id="username"
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900"
+                  placeholder="t-johndoe-abc1"
+                />
+              </div>
+              <p className="mt-1 text-xs text-gray-500">
+                This will be used for landlords to find you
+              </p>
             </div>
 
             <div>
@@ -180,7 +242,7 @@ export default function SignupPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900"
                   placeholder="you@example.com"
                 />
               </div>
@@ -198,7 +260,7 @@ export default function SignupPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900"
                   placeholder="••••••••"
                 />
               </div>
@@ -216,7 +278,7 @@ export default function SignupPage() {
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
-                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-gray-900"
                   placeholder="••••••••"
                 />
               </div>

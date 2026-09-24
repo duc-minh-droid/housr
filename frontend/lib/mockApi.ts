@@ -1,5 +1,5 @@
 // Mock API for Demo Tenant - No backend integration required
-import { User, Bill, Expense, RentPlan, ShopItem, Redemption } from '@/types';
+import { User, Bill, Expense, RentPlan, ShopItem, Redemption, Conversation, ChatMessage } from '@/types';
 import {
   mockUsers,
   mockBills,
@@ -178,20 +178,63 @@ export const mockExpensesApi = {
     return { success: true };
   },
   
-  getSummary: async (month?: number, year?: number) => {
+  getSummary: async (period: 'week' | 'month' | 'all' = 'month', month?: number, year?: number) => {
     await delay();
-    const expenses = await mockExpensesApi.getExpenses(month, year);
+    let expenses = await mockExpensesApi.getExpenses(month, year);
+    
+    // Filter by period
+    const now = new Date();
+    if (period === 'week') {
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      expenses = expenses.filter(e => new Date(e.date) >= weekAgo);
+    } else if (period === 'month') {
+      expenses = expenses.filter(e => {
+        const expDate = new Date(e.date);
+        return expDate.getMonth() === now.getMonth() && expDate.getFullYear() === now.getFullYear();
+      });
+    }
     
     const totalSpent = expenses.reduce((sum, exp) => sum + exp.amount, 0);
     const byCategory = expenses.reduce((acc, exp) => {
-      acc[exp.category] = (acc[exp.category] || 0) + exp.amount;
+      const existing = acc.find(c => c.category === exp.category);
+      if (existing) {
+        existing.total += exp.amount;
+        existing.count += 1;
+      } else {
+        acc.push({ category: exp.category, total: exp.amount, count: 1 });
+      }
       return acc;
-    }, {} as Record<string, number>);
+    }, [] as Array<{ category: string; total: number; count: number }>);
+    
+    // Generate timeseries
+    const timeseriesMap = new Map<string, number>();
+    expenses.forEach(exp => {
+      const date = new Date(exp.date);
+      const key = period === 'all'
+        ? `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+        : date.toISOString().split('T')[0];
+      timeseriesMap.set(key, (timeseriesMap.get(key) || 0) + exp.amount);
+    });
+    
+    // Sort and calculate cumulative totals
+    const sortedTimeseries = Array.from(timeseriesMap.entries())
+      .map(([date, total]) => ({ date, total }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+    
+    let cumulativeTotal = 0;
+    const timeseries = sortedTimeseries.map((item) => {
+      cumulativeTotal += item.total;
+      return {
+        date: item.date,
+        total: Number(cumulativeTotal.toFixed(2)),
+      };
+    });
     
     return {
-      total: totalSpent,
-      byCategory,
-      count: expenses.length,
+      totalSpent,
+      expensesByCategory: byCategory,
+      timeseries,
+      period,
     };
   },
 };
@@ -203,12 +246,17 @@ export const mockRentPlansApi = {
     const user = getCurrentMockUser();
     if (!user) throw new Error('Not authenticated');
     
-    return mockRentPlans.filter(plan => plan.tenantId === user.id);
+    // Tenants see plans proposed to them, landlords see plans they created
+    return mockRentPlans.filter(plan => 
+      user.role === 'tenant' ? plan.tenantId === user.id : plan.landlordId === user.id
+    );
   },
   
   getTenantPlan: async () => {
     const plans = await mockRentPlansApi.getRentPlans();
-    return plans.length > 0 ? plans[0] : null;
+    // Return first completed plan for tenant
+    const completedPlan = plans.find(p => p.status === 'completed');
+    return completedPlan || (plans.length > 0 ? plans[0] : null);
   },
   
   getLandlordPlans: async () => {
@@ -221,20 +269,173 @@ export const mockRentPlansApi = {
     return mockRentPlans.filter(plan => plan.landlordId === user.id);
   },
   
-  updatePlanStatus: async (planId: string, status: 'approved' | 'rejected') => {
+  // Landlord creates a new rent plan for a tenant
+  createPlan: async (planData: {
+    tenantId: string;
+    monthlyRent: number;
+    deposit: number;
+    duration: number;
+    description?: string;
+    startDate?: string;
+  }) => {
     await delay();
     const user = getCurrentMockUser();
     if (!user) throw new Error('Not authenticated');
     
-    if (user.role !== 'landlord') throw new Error('Unauthorized');
+    if (user.role !== 'landlord') throw new Error('Only landlords can create rent plans');
+    
+    const newPlan: RentPlan = {
+      id: `mock-plan-${Date.now()}`,
+      tenantId: planData.tenantId,
+      landlordId: user.id,
+      monthlyRent: planData.monthlyRent,
+      deposit: planData.deposit,
+      duration: planData.duration,
+      status: 'pending',
+      proposedDate: new Date().toISOString(),
+      reviewedDate: null,
+    };
+    
+    mockRentPlans.push(newPlan);
+    return newPlan;
+  },
+  
+  // Tenant accepts a rent plan (simulates Stripe payment for mock users)
+  acceptPlan: async (planId: string) => {
+    await delay(800); // Simulate payment processing
+    const user = getCurrentMockUser();
+    if (!user) throw new Error('Not authenticated');
+    
+    if (user.role !== 'tenant') throw new Error('Only tenants can accept rent plans');
     
     const plan = mockRentPlans.find(p => p.id === planId);
     if (!plan) throw new Error('Plan not found');
+    if (plan.tenantId !== user.id) throw new Error('Unauthorized');
+    if (plan.status !== 'pending') throw new Error('Plan already reviewed');
     
-    plan.status = status;
+    // Simulate successful payment and update plan
+    plan.status = 'completed';
+    plan.reviewedDate = new Date().toISOString();
+    
+    // For mock users, return a fake session URL (frontend will handle mock flow)
+    return {
+      sessionUrl: '/dashboard/tenant/rent-plan?mock=true&success=true&planId=' + planId,
+      sessionId: 'mock_session_' + Date.now(),
+    };
+  },
+  
+  // Tenant rejects a rent plan
+  rejectPlan: async (planId: string) => {
+    await delay();
+    const user = getCurrentMockUser();
+    if (!user) throw new Error('Not authenticated');
+    
+    if (user.role !== 'tenant') throw new Error('Only tenants can reject rent plans');
+    
+    const plan = mockRentPlans.find(p => p.id === planId);
+    if (!plan) throw new Error('Plan not found');
+    if (plan.tenantId !== user.id) throw new Error('Unauthorized');
+    if (plan.status !== 'pending') throw new Error('Plan already reviewed');
+    
+    plan.status = 'rejected';
     plan.reviewedDate = new Date().toISOString();
     
     return plan;
+  },
+  
+  // Landlord cancels a rent plan
+  cancelPlan: async (planId: string) => {
+    await delay();
+    const user = getCurrentMockUser();
+    if (!user) throw new Error('Not authenticated');
+    
+    if (user.role !== 'landlord') throw new Error('Only landlords can cancel rent plans');
+    
+    const plan = mockRentPlans.find(p => p.id === planId);
+    if (!plan) throw new Error('Plan not found');
+    if (plan.landlordId !== user.id) throw new Error('Unauthorized');
+    if (plan.status === 'completed') throw new Error('Cannot cancel completed plan');
+    
+    const index = mockRentPlans.findIndex(p => p.id === planId);
+    if (index > -1) {
+      mockRentPlans.splice(index, 1);
+    }
+    
+    return { success: true };
+  },
+};
+
+// Mock Budget API
+interface MockBudgetData {
+  period: string;
+  amount: number;
+  categoryAllocations?: Array<{ category: string; percentage: number; amount: number }>;
+}
+
+const mockBudgets = new Map<string, MockBudgetData>();
+
+export const mockBudgetApi = {
+  getBudget: async (period: 'week' | 'month' | 'all') => {
+    await delay();
+    const user = getCurrentMockUser();
+    if (!user) throw new Error('Not authenticated');
+    
+    const key = `${user.id}-${period}`;
+    const budgetData = mockBudgets.get(key);
+    
+    return {
+      budget: budgetData ? {
+        id: key,
+        tenantId: user.id,
+        period,
+        amount: budgetData.amount,
+        categoryBudgets: budgetData.categoryAllocations?.map((ca, idx) => ({
+          id: `cat-${key}-${idx}`,
+          budgetId: key,
+          category: ca.category,
+          percentage: ca.percentage,
+          amount: ca.amount,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        })),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } : null,
+      period,
+    };
+  },
+  
+  updateBudget: async (
+    period: 'week' | 'month' | 'all',
+    amount: number,
+    categoryAllocations?: Array<{ category: string; percentage: number; amount: number }>
+  ) => {
+    await delay();
+    const user = getCurrentMockUser();
+    if (!user) throw new Error('Not authenticated');
+    
+    const key = `${user.id}-${period}`;
+    mockBudgets.set(key, { period, amount, categoryAllocations });
+    
+    return {
+      budget: {
+        id: key,
+        tenantId: user.id,
+        period,
+        amount,
+        categoryBudgets: categoryAllocations?.map((ca, idx) => ({
+          id: `cat-${key}-${idx}`,
+          budgetId: key,
+          category: ca.category,
+          percentage: ca.percentage,
+          amount: ca.amount,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        })),
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      },
+    };
   },
 };
 
@@ -344,5 +545,179 @@ export const mockDashboardApi = {
       monthlyExpenses: monthlyTotal,
       rentPlan,
     };
+  },
+};
+
+// Mock conversations storage
+const mockConversations: Conversation[] = [];
+const mockMessages: ChatMessage[] = [];
+
+// Mock AI Chat API
+export const mockAiChatApi = {
+  createConversation: async (title?: string): Promise<Conversation> => {
+    await delay();
+    const user = getCurrentMockUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const newConversation: Conversation = {
+      id: `mock-conv-${Date.now()}`,
+      userId: user.id,
+      title: title || 'New Conversation',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      messages: [],
+    };
+
+    mockConversations.push(newConversation);
+    return newConversation;
+  },
+
+  getConversations: async (): Promise<Conversation[]> => {
+    await delay();
+    const user = getCurrentMockUser();
+    if (!user) throw new Error('Not authenticated');
+
+    return mockConversations
+      .filter(c => c.userId === user.id)
+      .map(conv => ({
+        ...conv,
+        messages: mockMessages
+          .filter(m => m.conversationId === conv.id)
+          .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+          .slice(0, 1), // Only first message for preview
+      }))
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+  },
+
+  getConversation: async (conversationId: string): Promise<Conversation> => {
+    await delay();
+    const user = getCurrentMockUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const conversation = mockConversations.find(c => c.id === conversationId && c.userId === user.id);
+    if (!conversation) throw new Error('Conversation not found');
+
+    const messages = mockMessages
+      .filter(m => m.conversationId === conversationId)
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+    return {
+      ...conversation,
+      messages,
+    };
+  },
+
+  sendMessage: async (conversationId: string, message: string) => {
+    await delay(500); // Longer delay to simulate AI processing
+    const user = getCurrentMockUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const conversation = mockConversations.find(c => c.id === conversationId && c.userId === user.id);
+    if (!conversation) throw new Error('Conversation not found');
+
+    // Create user message
+    const userMessage: ChatMessage = {
+      id: `mock-msg-${Date.now()}-user`,
+      conversationId,
+      role: 'user',
+      content: message,
+      createdAt: new Date().toISOString(),
+    };
+    mockMessages.push(userMessage);
+
+    // Get user's financial data for context
+    const expenses = await mockExpensesApi.getExpenses();
+    const bills = await mockBillsApi.getBills();
+    const rentPlan = await mockRentPlansApi.getTenantPlan();
+
+    // Generate mock AI response based on context
+    let aiResponse = '';
+    const lowerMessage = message.toLowerCase();
+
+    if (lowerMessage.includes('expense') || lowerMessage.includes('spending')) {
+      const totalExpenses = expenses.reduce((sum, exp) => sum + exp.amount, 0);
+      const categoryTotals: { [key: string]: number } = {};
+      expenses.forEach(exp => {
+        categoryTotals[exp.category] = (categoryTotals[exp.category] || 0) + exp.amount;
+      });
+      const topCategory = Object.entries(categoryTotals).sort((a, b) => b[1] - a[1])[0];
+      
+      aiResponse = `Based on your expense data, you've spent a total of $${totalExpenses.toFixed(2)}. Your highest spending category is ${topCategory[0]} at $${topCategory[1].toFixed(2)}. Consider setting a budget for this category to help manage your spending better!`;
+    } else if (lowerMessage.includes('bill') || lowerMessage.includes('payment')) {
+      const unpaidBills = bills.filter(b => !b.isPaid);
+      const totalDue = unpaidBills.reduce((sum, b) => sum + b.amount, 0);
+      
+      if (unpaidBills.length > 0) {
+        aiResponse = `You currently have ${unpaidBills.length} unpaid bill(s) totaling $${totalDue.toFixed(2)}. I recommend paying these as soon as possible to maintain a good payment record and earn reward points!`;
+      } else {
+        aiResponse = `Great news! You're all caught up on your bills. Keep up the excellent payment habits to continue earning reward points!`;
+      }
+    } else if (lowerMessage.includes('save') || lowerMessage.includes('money')) {
+      aiResponse = `Here are some personalized tips to save money: 1) Review your spending on non-essentials like entertainment and dining out. 2) Set up automatic savings transfers on payday. 3) Take advantage of your reward points for discounts. Would you like me to analyze your spending in a specific category?`;
+    } else if (lowerMessage.includes('rent')) {
+      if (rentPlan) {
+        aiResponse = `Your current rent is $${rentPlan.monthlyRent.toFixed(2)} per month with a $${rentPlan.deposit.toFixed(2)} deposit. This is a ${rentPlan.duration}-month lease. Make sure to pay on time to earn reward points and maintain a good rental history!`;
+      } else {
+        aiResponse = `I don't see an active rent plan for you. Please check with your landlord to set up your rental agreement.`;
+      }
+    } else if (lowerMessage.includes('budget')) {
+      aiResponse = `A good budgeting strategy is the 50/30/20 rule: 50% for needs, 30% for wants, and 20% for savings. Based on your expenses, I can help you analyze if you're following this ratio. Would you like me to break down your spending by category?`;
+    } else if (lowerMessage.includes('point') || lowerMessage.includes('reward')) {
+      aiResponse = `You currently have ${user.points || 0} reward points! You earn points by paying rent on time and staying under your monthly budget. Check out the Shop page to redeem your points for rewards and discounts!`;
+    } else {
+      // Default helpful response
+      aiResponse = `I'm here to help with your finances! You can ask me about:\n• Your expenses and spending patterns\n• Unpaid bills and payment schedules\n• Budgeting tips and savings strategies\n• Your rent plan details\n• How to earn and use reward points\n\nWhat would you like to know?`;
+    }
+
+    // Create AI message
+    const assistantMessage: ChatMessage = {
+      id: `mock-msg-${Date.now()}-assistant`,
+      conversationId,
+      role: 'assistant',
+      content: aiResponse,
+      createdAt: new Date(Date.now() + 100).toISOString(), // Slightly after user message
+    };
+    mockMessages.push(assistantMessage);
+
+    // Update conversation timestamp
+    conversation.updatedAt = new Date().toISOString();
+
+    return {
+      userMessage,
+      assistantMessage,
+    };
+  },
+
+  updateConversation: async (conversationId: string, title: string): Promise<Conversation> => {
+    await delay();
+    const user = getCurrentMockUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const conversation = mockConversations.find(c => c.id === conversationId && c.userId === user.id);
+    if (!conversation) throw new Error('Conversation not found');
+
+    conversation.title = title;
+    conversation.updatedAt = new Date().toISOString();
+
+    return conversation;
+  },
+
+  deleteConversation: async (conversationId: string): Promise<void> => {
+    await delay();
+    const user = getCurrentMockUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const index = mockConversations.findIndex(c => c.id === conversationId && c.userId === user.id);
+    if (index === -1) throw new Error('Conversation not found');
+
+    mockConversations.splice(index, 1);
+    
+    // Delete all messages in this conversation
+    const messageIndices = mockMessages
+      .map((m, i) => (m.conversationId === conversationId ? i : -1))
+      .filter(i => i !== -1)
+      .reverse(); // Delete from end to start to maintain indices
+    
+    messageIndices.forEach(i => mockMessages.splice(i, 1));
   },
 };

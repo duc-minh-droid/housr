@@ -2,6 +2,45 @@ import { asyncHandler } from '../utils/errorHandler.js';
 import { listTenantsForLandlord } from '../models/User.js';
 import prisma from '../config/db.js';
 
+// Search users by username (landlord only)
+export const searchUsers = asyncHandler(async (req, res) => {
+    if (req.user.role !== 'landlord') {
+        const error = new Error('Only landlords can search users');
+        error.status = 403;
+        throw error;
+    }
+
+    const { username } = req.query;
+
+    if (!username || username.trim().length < 2) {
+        return res.json({ users: [] });
+    }
+
+    // Search for tenants by username (SQLite-compatible search)
+    // Note: SQLite doesn't support mode: 'insensitive', so we do case-insensitive search differently
+    const searchTerm = username.trim().toLowerCase();
+    
+    const allTenants = await prisma.user.findMany({
+        where: {
+            role: 'tenant',
+        },
+        select: {
+            id: true,
+            username: true,
+            email: true,
+            name: true,
+        },
+    });
+
+    // Filter in JavaScript for case-insensitive search
+    const users = allTenants
+        .filter(user => user.username.toLowerCase().includes(searchTerm))
+        .slice(0, 10)
+        .sort((a, b) => a.username.localeCompare(b.username));
+
+    res.json({ users });
+});
+
 export const getTenants = asyncHandler(async (req, res) => {
     if (req.user.role !== 'landlord') {
         const error = new Error('Only landlords can view their tenants');

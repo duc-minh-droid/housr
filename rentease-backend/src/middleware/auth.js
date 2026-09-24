@@ -12,6 +12,7 @@ export const authenticate = asyncHandler(async (req, res, next) => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        console.log('❌ Auth failed: No valid Authorization header');
         throw unauthorizedError();
     }
 
@@ -21,6 +22,7 @@ export const authenticate = asyncHandler(async (req, res, next) => {
     try {
         payload = verifyAccessToken(token);
     } catch (err) {
+        console.log('❌ Auth failed: Invalid or expired token');
         throw unauthorizedError();
     }
 
@@ -29,6 +31,7 @@ export const authenticate = asyncHandler(async (req, res, next) => {
     });
 
     if (!user) {
+        console.log('❌ Auth failed: User not found in database');
         throw unauthorizedError();
     }
 

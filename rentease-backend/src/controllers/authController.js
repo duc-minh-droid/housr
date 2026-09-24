@@ -9,18 +9,41 @@ const SALT_ROUNDS = 10;
 const buildUserResponse = (user) => ({
     id: user.id,
     email: user.email,
+    username: user.username,
     name: user.name,
     role: user.role,
     points: user.points,
     landlordId: user.landlordId,
 });
 
+// Helper function to generate unique username
+const generateUsername = (name, role) => {
+    const cleanName = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+    const prefix = role === 'tenant' ? 't' : 'l';
+    const random = Math.random().toString(36).substring(2, 8);
+    return `${prefix}-${cleanName.substring(0, 8)}-${random}`;
+};
+
 export const register = asyncHandler(async (req, res) => {
-    const { email, password, name, role = 'tenant', landlordId } = req.body;
+    const { email, password, name, role = 'tenant', landlordId, username } = req.body;
 
     if (!email || !password || !name) {
         const error = new Error('Missing required fields');
         error.status = 400;
+        throw error;
+    }
+
+    // Generate username if not provided
+    const finalUsername = username || generateUsername(name, role);
+
+    // Check if username is taken
+    const existingUsername = await prisma.user.findUnique({
+        where: { username: finalUsername },
+    });
+
+    if (existingUsername) {
+        const error = new Error('Username already taken');
+        error.status = 409;
         throw error;
     }
 
@@ -53,6 +76,7 @@ export const register = asyncHandler(async (req, res) => {
 
     const user = await createUser({
         email,
+        username: finalUsername,
         password: hashedPassword,
         name,
         role,

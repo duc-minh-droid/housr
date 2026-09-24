@@ -1,6 +1,12 @@
 import prisma from '../config/db.js';
 import { asyncHandler } from '../utils/errorHandler.js';
-import { createExpense, deleteExpense, getExpenseSummary, listExpensesByTenant } from '../models/Expense.js';
+import { 
+    createExpense, 
+    deleteExpense, 
+    getExpenseSummary, 
+    getExpenseTimeseries,
+    listExpensesByTenant 
+} from '../models/Expense.js';
 
 export const getExpenses = asyncHandler(async (req, res) => {
     if (req.user.role !== 'tenant') {
@@ -9,7 +15,14 @@ export const getExpenses = asyncHandler(async (req, res) => {
         throw error;
     }
 
-    const expenses = await listExpensesByTenant(req.user.id);
+    const period = req.query.period || 'month';
+    if (!['week', 'month', 'all'].includes(period)) {
+        const error = new Error('Invalid period. Must be "week", "month", or "all"');
+        error.status = 400;
+        throw error;
+    }
+
+    const expenses = await listExpensesByTenant(req.user.id, period);
     res.json({ expenses });
 });
 
@@ -81,6 +94,22 @@ export const expenseSummary = asyncHandler(async (req, res) => {
         throw error;
     }
 
-    const summary = await getExpenseSummary(req.user.id);
-    res.json({ summary });
+    const period = req.query.period || 'month';
+    if (!['week', 'month', 'all'].includes(period)) {
+        const error = new Error('Invalid period. Must be "week", "month", or "all"');
+        error.status = 400;
+        throw error;
+    }
+
+    const [summary, timeseries] = await Promise.all([
+        getExpenseSummary(req.user.id, period),
+        getExpenseTimeseries(req.user.id, period),
+    ]);
+
+    res.json({
+        totalSpent: summary.total,
+        expensesByCategory: summary.categories,
+        timeseries,
+        period,
+    });
 });

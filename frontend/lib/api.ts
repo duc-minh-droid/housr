@@ -10,9 +10,11 @@ import {
   mockRewardsApi,
   mockShopApi,
   mockDashboardApi,
+  mockBudgetApi,
+  mockAiChatApi,
 } from './mockApi';
 
-// Base URL for API - Port 5001 for RentEase Backend
+// Base URL for API - Port 5001 for Financr Backend
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5001';
 
 // Helper function to get auth token
@@ -235,24 +237,39 @@ export const billsApi = {
 
 // Expenses API
 export const expensesApi = {
-  getExpenses: async (month?: number, year?: number) => {
+  getExpenses: async (period: 'week' | 'month' | 'all' = 'month', month?: number, year?: number) => {
     // Use mock API for mock users
     if (isCurrentUserMock()) {
-      return mockExpensesApi.getExpenses(month, year);
+      // For mock API, filter expenses by period
+      let expenses = await mockExpensesApi.getExpenses(month, year);
+      const now = new Date();
+      
+      if (period === 'week') {
+        const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        expenses = expenses.filter(e => new Date(e.date) >= weekAgo);
+      } else if (period === 'month' && !month && !year) {
+        expenses = expenses.filter(e => {
+          const expDate = new Date(e.date);
+          return expDate.getMonth() === now.getMonth() && expDate.getFullYear() === now.getFullYear();
+        });
+      }
+      
+      return expenses;
     }
     
     let url = '/api/expenses';
     const params = new URLSearchParams();
+    params.append('period', period);
     if (month) params.append('month', month.toString());
     if (year) params.append('year', year.toString());
-    if (params.toString()) url += `?${params.toString()}`;
+    url += `?${params.toString()}`;
     
     const data = await fetchWithAuth(url);
     return data.expenses || data;
   },
   
   getTenantExpenses: async (month?: number, year?: number) => {
-    return expensesApi.getExpenses(month, year);
+    return expensesApi.getExpenses('month', month, year);
   },
   
   createExpense: async (expenseData: {
@@ -285,19 +302,52 @@ export const expensesApi = {
     return { success: true };
   },
   
-  getSummary: async (month?: number, year?: number) => {
+  getSummary: async (period: 'week' | 'month' | 'all' = 'month', month?: number, year?: number) => {
     // Use mock API for mock users
     if (isCurrentUserMock()) {
-      return mockExpensesApi.getSummary(month, year);
+      return mockExpensesApi.getSummary(period, month, year);
     }
     
     let url = '/api/expenses/summary';
     const params = new URLSearchParams();
+    params.append('period', period);
     if (month) params.append('month', month.toString());
     if (year) params.append('year', year.toString());
-    if (params.toString()) url += `?${params.toString()}`;
+    url += `?${params.toString()}`;
     
     const data = await fetchWithAuth(url);
+    return data;
+  },
+};
+
+// Budget API
+export const budgetApi = {
+  getBudget: async (period: 'week' | 'month' | 'all' = 'month') => {
+    // Use mock API for mock users
+    if (isCurrentUserMock()) {
+      return mockBudgetApi.getBudget(period);
+    }
+    
+    const params = new URLSearchParams();
+    params.append('period', period);
+    const data = await fetchWithAuth(`/api/budget?${params.toString()}`);
+    return data;
+  },
+  
+  updateBudget: async (
+    period: 'week' | 'month' | 'all',
+    amount: number,
+    categoryAllocations?: Array<{ category: string; percentage: number; amount: number }>
+  ) => {
+    // Use mock API for mock users
+    if (isCurrentUserMock()) {
+      return mockBudgetApi.updateBudget(period, amount, categoryAllocations);
+    }
+    
+    const data = await fetchWithAuth('/api/budget', {
+      method: 'POST',
+      body: JSON.stringify({ period, amount, categoryAllocations }),
+    });
     return data;
   },
 };
@@ -335,12 +385,19 @@ export const rentPlansApi = {
     return data.plans || data;
   },
   
+  // Landlord creates a rent plan for a tenant
   createPlan: async (planData: {
-    landlordId: string;
+    tenantId: string;
     monthlyRent: number;
     deposit: number;
     duration: number;
+    description?: string;
+    startDate?: string;
   }) => {
+    if (isCurrentUserMock()) {
+      return mockRentPlansApi.createPlan(planData);
+    }
+    
     const data = await fetchWithAuth('/api/rent-plans', {
       method: 'POST',
       body: JSON.stringify(planData),
@@ -348,25 +405,40 @@ export const rentPlansApi = {
     return data.plan || data;
   },
   
-  updatePlanStatus: async (planId: string, status: 'approved' | 'rejected') => {
-    // Use mock API for mock users
+  // Tenant accepts a rent plan and initiates payment
+  acceptPlan: async (planId: string) => {
     if (isCurrentUserMock()) {
-      return mockRentPlansApi.updatePlanStatus(planId, status);
+      return mockRentPlansApi.acceptPlan(planId);
     }
     
-    const endpoint = status === 'approved' ? 'approve' : 'reject';
-    const data = await fetchWithAuth(`/api/rent-plans/${planId}/${endpoint}`, {
+    const data = await fetchWithAuth(`/api/rent-plans/${planId}/accept`, {
+      method: 'POST',
+    });
+    return data; // { sessionUrl, sessionId }
+  },
+  
+  // Tenant rejects a rent plan
+  rejectPlan: async (planId: string) => {
+    if (isCurrentUserMock()) {
+      return mockRentPlansApi.rejectPlan(planId);
+    }
+    
+    const data = await fetchWithAuth(`/api/rent-plans/${planId}/reject`, {
       method: 'POST',
     });
     return data.plan || data;
   },
   
-  approvePlan: async (planId: string) => {
-    return rentPlansApi.updatePlanStatus(planId, 'approved');
-  },
-  
-  rejectPlan: async (planId: string) => {
-    return rentPlansApi.updatePlanStatus(planId, 'rejected');
+  // Landlord cancels a rent plan
+  cancelPlan: async (planId: string) => {
+    if (isCurrentUserMock()) {
+      return mockRentPlansApi.cancelPlan(planId);
+    }
+    
+    const data = await fetchWithAuth(`/api/rent-plans/${planId}`, {
+      method: 'DELETE',
+    });
+    return data.plan || data;
   },
 };
 
@@ -509,6 +581,10 @@ export const dashboardApi = {
 export const aiChatApi = {
   // Create a new conversation
   createConversation: async (title?: string) => {
+    if (isCurrentUserMock()) {
+      return mockAiChatApi.createConversation(title);
+    }
+
     const data = await fetchWithAuth('/api/ai/conversations', {
       method: 'POST',
       body: JSON.stringify({ title: title || 'New Conversation' }),
@@ -518,18 +594,30 @@ export const aiChatApi = {
   
   // Get all conversations for the user
   getConversations: async () => {
+    if (isCurrentUserMock()) {
+      return mockAiChatApi.getConversations();
+    }
+
     const data = await fetchWithAuth('/api/ai/conversations');
     return data.conversations || data;
   },
   
   // Get a specific conversation with all messages
   getConversation: async (conversationId: string) => {
+    if (isCurrentUserMock()) {
+      return mockAiChatApi.getConversation(conversationId);
+    }
+
     const data = await fetchWithAuth(`/api/ai/conversations/${conversationId}`);
     return data.conversation || data;
   },
   
   // Send a message in a conversation
   sendMessage: async (conversationId: string, message: string) => {
+    if (isCurrentUserMock()) {
+      return mockAiChatApi.sendMessage(conversationId, message);
+    }
+
     const data = await fetchWithAuth(`/api/ai/conversations/${conversationId}/messages`, {
       method: 'POST',
       body: JSON.stringify({ message }),
@@ -539,6 +627,10 @@ export const aiChatApi = {
   
   // Update conversation title
   updateConversation: async (conversationId: string, title: string) => {
+    if (isCurrentUserMock()) {
+      return mockAiChatApi.updateConversation(conversationId, title);
+    }
+
     const data = await fetchWithAuth(`/api/ai/conversations/${conversationId}`, {
       method: 'PATCH',
       body: JSON.stringify({ title }),
@@ -548,6 +640,10 @@ export const aiChatApi = {
   
   // Delete a conversation
   deleteConversation: async (conversationId: string) => {
+    if (isCurrentUserMock()) {
+      return mockAiChatApi.deleteConversation(conversationId);
+    }
+
     const data = await fetchWithAuth(`/api/ai/conversations/${conversationId}`, {
       method: 'DELETE',
     });

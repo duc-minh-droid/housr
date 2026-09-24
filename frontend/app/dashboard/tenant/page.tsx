@@ -245,12 +245,12 @@ export default function TenantDashboard() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.4 }}
-        className="bg-white dark:bg-gray-800 rounded-2xl border border-gray-100 dark:border-gray-700 p-4 sm:p-6 shadow-sm"
+        className="bg-card-bg rounded-2xl border border-border p-4 sm:p-6 shadow-sm"
       >
         <div className="flex items-center justify-between mb-4 sm:mb-6">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-              <Receipt className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+          <h2 className="text-lg sm:text-xl font-bold text-card-text flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-white/10 flex items-center justify-center">
+              <Receipt className="w-4 h-4 text-white" />
             </div>
             Recent Bills
           </h2>
@@ -270,8 +270,8 @@ export default function TenantDashboard() {
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: "spring" }}
             >
-              <div className="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 mx-auto flex items-center justify-center mb-3">
-                <Receipt className="w-8 h-8 text-gray-400" />
+              <div className="w-16 h-16 rounded-full bg-white/10 mx-auto flex items-center justify-center mb-3">
+                <Receipt className="w-8 h-8 text-card-text" />
               </div>
               <p className="text-gray-500 dark:text-gray-400">No bills yet</p>
             </motion.div>
@@ -286,7 +286,7 @@ export default function TenantDashboard() {
                 transition={{ duration: 0.3, delay: index * 0.05 }}
                 whileHover={{ scale: 1.01, x: 4 }}
                 whileTap={{ scale: 0.99 }}
-                className="flex items-center justify-between p-3 sm:p-4 border border-gray-100 dark:border-gray-700 rounded-xl hover:shadow-md hover:border-gray-200 dark:hover:border-gray-600 transition-all cursor-pointer bg-gray-50/50 dark:bg-gray-900/50"
+                className="flex items-center justify-between p-3 sm:p-4 border border-card-text/20 rounded-xl hover:shadow-md hover:border-card-text/30 transition-all cursor-pointer bg-white/5"
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   <motion.div

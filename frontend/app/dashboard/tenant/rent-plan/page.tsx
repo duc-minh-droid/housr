@@ -1,24 +1,31 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button, Alert } from '@/components/UIComponents';
 import { rentPlansApi } from '@/lib/api';
 import { formatCurrency, formatDate, getStatusColor } from '@/lib/utils';
+import {
+  FileText,
+  DollarSign,
+  Calendar,
+  Clock,
+  CheckCircle,
+  XCircle,
+  CreditCard,
+  Sparkles,
+  Home,
+} from 'lucide-react';
 
 export default function TenantRentPlanPage() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
-  const [rentPlan, setRentPlan] = useState<any>(null);
+  const [rentPlans, setRentPlans] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [alert, setAlert] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
-  
-  // Form state
-  const [monthlyRent, setMonthlyRent] = useState('');
-  const [deposit, setDeposit] = useState('');
-  const [duration, setDuration] = useState('');
-  const [landlordId, setLandlordId] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [processingPlanId, setProcessingPlanId] = useState<string | null>(null);
 
   useEffect(() => {
     // Check for success/cancel from Stripe redirect first
@@ -50,56 +57,68 @@ export default function TenantRentPlanPage() {
     }
   }, [searchParams, router]);
 
-  const loadRentPlan = async () => {
+  const loadRentPlans = async () => {
     if (!user) return;
-    
+
     try {
       setIsLoading(true);
-      const data = await rentPlansApi.getTenantPlan();
-      setRentPlan(data);
+      const data = await rentPlansApi.getRentPlans();
+      setRentPlans(data as any[]);
     } catch (error) {
-      console.error('Error loading rent plan:', error);
-      setRentPlan(null);
+      console.error('Error loading rent plans:', error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  const handleAcceptPlan = async (planId: string) => {
+    setProcessingPlanId(planId);
     setAlert(null);
-    
-    if (!user?.id) {
-      setAlert({ type: 'error', message: 'User not authenticated' });
-      setIsSubmitting(false);
-      return;
-    }
-    
+
     try {
-      await rentPlansApi.createPlan({
-        landlordId: landlordId,
-        monthlyRent: parseFloat(monthlyRent),
-        deposit: parseFloat(deposit),
-        duration: parseInt(duration),
-      });
-      
-      setAlert({ type: 'success', message: 'Rent plan submitted successfully!' });
-      setIsModalOpen(false);
-      resetForm();
-      loadRentPlan();
+      // Accept plan and get Stripe checkout URL
+      const response = await rentPlansApi.acceptPlan(planId);
+
+      // Redirect to Stripe checkout
+      if (response.sessionUrl) {
+        window.location.href = response.sessionUrl;
+      } else {
+        setAlert({
+          type: 'error',
+          message: 'Failed to initiate payment. Please try again.',
+        });
+        setProcessingPlanId(null);
+      }
     } catch (error: any) {
-      setAlert({ type: 'error', message: error.message || 'Failed to submit rent plan' });
-    } finally {
-      setIsSubmitting(false);
+      setAlert({
+        type: 'error',
+        message: error.message || 'Failed to accept rent plan',
+      });
+      setProcessingPlanId(null);
     }
   };
 
-  const resetForm = () => {
-    setMonthlyRent('');
-    setDeposit('');
-    setDuration('');
-    setLandlordId('');
+  const handleRejectPlan = async (planId: string) => {
+    if (!confirm('Are you sure you want to reject this rent plan proposal?')) return;
+
+    setProcessingPlanId(planId);
+    setAlert(null);
+
+    try {
+      await rentPlansApi.rejectPlan(planId);
+      setAlert({
+        type: 'success',
+        message: 'Rent plan rejected.',
+      });
+      loadRentPlans();
+    } catch (error: any) {
+      setAlert({
+        type: 'error',
+        message: error.message || 'Failed to reject rent plan',
+      });
+    } finally {
+      setProcessingPlanId(null);
+    }
   };
 
   if (isLoading) {
@@ -113,6 +132,12 @@ export default function TenantRentPlanPage() {
       </div>
     );
   }
+
+  const pendingPlans = rentPlans.filter((p) => p.status === 'pending');
+  const acceptedPlans = rentPlans.filter((p) => p.status === 'accepted');
+  const completedPlans = rentPlans.filter((p) => p.status === 'completed');
+  const rejectedPlans = rentPlans.filter((p) => p.status === 'rejected');
+  const activePlan = completedPlans[0]; // Most recent completed plan
 
   return (
     <div className="space-y-6">
@@ -129,67 +154,95 @@ export default function TenantRentPlanPage() {
         <Alert type={alert.type} message={alert.message} onClose={() => setAlert(null)} />
       )}
 
-      {/* Current Rent Plan */}
-      {rentPlan ? (
-        <div className="bg-white rounded-lg border border-gray-200 p-6">
+      {/* Active Rent Plan */}
+      {activePlan && (
+        <div className="bg-gradient-to-br from-primary/10 to-primary-light/10 dark:from-primary/20 dark:to-primary-light/20 border-2 border-primary dark:border-primary-light rounded-2xl p-6 shadow-xl">
           <div className="flex items-start justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Current Plan</h2>
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(rentPlan.status)}`}>
-              {rentPlan.status.charAt(0).toUpperCase() + rentPlan.status.slice(1)}
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-primary rounded-2xl flex items-center justify-center">
+                <Home className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold text-primary dark:text-primary-light">
+                  Active Rental Agreement
+                </h2>
+                <p className="text-sm text-primary-light dark:text-primary-light">
+                  with {activePlan.landlord?.name || 'Landlord'}
+                </p>
+              </div>
+            </div>
+            <span className="px-4 py-2 bg-primary text-white rounded-full text-sm font-bold shadow-lg flex items-center gap-2">
+              <CheckCircle className="w-4 h-4" />
+              Active
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <p className="text-sm text-gray-600">Monthly Rent</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {formatCurrency(rentPlan.monthlyRent)}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+            <div className="bg-white/60 dark:bg-gray-900/20 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <DollarSign className="w-5 h-5 text-primary" />
+                <p className="text-xs font-semibold text-primary dark:text-primary-light">
+                  Monthly Rent
+                </p>
+              </div>
+              <p className="text-2xl font-bold text-primary dark:text-white">
+                {formatCurrency(activePlan.monthlyRent)}
               </p>
             </div>
 
-            <div>
-              <p className="text-sm text-gray-600">Security Deposit</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {formatCurrency(rentPlan.deposit)}
+            <div className="bg-white/60 dark:bg-gray-900/20 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <DollarSign className="w-5 h-5 text-blue-600" />
+                <p className="text-xs font-semibold text-primary dark:text-primary-light">
+                  Deposit Paid
+                </p>
+              </div>
+              <p className="text-2xl font-bold text-primary dark:text-white">
+                {formatCurrency(activePlan.deposit)}
               </p>
             </div>
 
-            <div>
-              <p className="text-sm text-gray-600">Duration</p>
-              <p className="text-xl font-bold text-gray-900">
-                {rentPlan.duration} months
+            <div className="bg-white/60 dark:bg-gray-900/20 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Clock className="w-5 h-5 text-purple-600" />
+                <p className="text-xs font-semibold text-primary dark:text-primary-light">
+                  Duration
+                </p>
+              </div>
+              <p className="text-2xl font-bold text-primary dark:text-white">
+                {activePlan.duration} mo
               </p>
             </div>
 
-            <div>
-              <p className="text-sm text-gray-600">Proposed Date</p>
-              <p className="text-xl font-bold text-gray-900">
-                {formatDate(rentPlan.proposedDate)}
+            <div className="bg-white/60 dark:bg-gray-900/20 rounded-xl p-4">
+              <div className="flex items-center gap-2 mb-2">
+                <Calendar className="w-5 h-5 text-orange-600" />
+                <p className="text-xs font-semibold text-primary dark:text-primary-light">
+                  Started
+                </p>
+              </div>
+              <p className="text-sm font-bold text-primary dark:text-white">
+                {formatDate(activePlan.completedDate || activePlan.proposedDate)}
               </p>
             </div>
           </div>
 
-          {rentPlan.status === 'approved' && rentPlan.reviewedDate && (
-            <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-sm font-medium text-green-800">
-                ✓ Approved on {formatDate(rentPlan.reviewedDate)}
-              </p>
-              <p className="text-sm text-green-700 mt-1">
-                Your rental agreement is active. Make sure to pay your rent on time to earn reward points!
+          {activePlan.description && (
+            <div className="mt-4 p-3 bg-white/60 dark:bg-gray-900/20 rounded-lg">
+              <p className="text-sm text-primary dark:text-primary-light">
+                <strong>Note:</strong> {activePlan.description}
               </p>
             </div>
           )}
 
-          {rentPlan.status === 'rejected' && (
-            <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-sm font-medium text-red-800">
-                ✗ Plan was rejected
-              </p>
-              <p className="text-sm text-red-700 mt-1">
-                Please submit a new rent plan with different terms.
-              </p>
-            </div>
-          )}
+          <div className="mt-4 flex items-center gap-2 text-sm text-primary-light dark:text-primary-light">
+            <Sparkles className="w-4 h-4" />
+            <span>
+              <strong>Pro Tip:</strong> Pay your rent on time to earn reward points!
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Pending Proposals */}
       {pendingPlans.length > 0 && (
