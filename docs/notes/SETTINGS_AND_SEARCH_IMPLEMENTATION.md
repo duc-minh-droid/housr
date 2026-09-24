@@ -59,8 +59,7 @@ Username: test-landlord
    Password: password123
 
 2. Username: moelnahhas
-   Email: mohamed.elnahhas@icloud.com
-   Password: (your password)
+   Email: (your own account)
 
 3. Username: john-tenant
    Email: john.tenant@example.com

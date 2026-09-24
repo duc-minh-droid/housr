@@ -128,7 +128,7 @@
 
 ## 🚀 Testing
 
-1. **Log in as landlord** (moelnahhas@icloud.com)
+1. **Log in as landlord** (any landlord account)
 2. **Click "Properties"** in sidebar
 3. **Create a property:**
    - Name: "Sunset Apartments"

@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 470" font-family="'Segoe UI', 'Helvetica Neue', Arial, sans-serif">
+  <style>
+    .bg { fill: #ffffff; }
+    .head { fill: #204e3a; } .head-t { fill: #ffffff; font-size: 14px; font-weight: 700; }
+    .life { stroke: #9aa39d; stroke-width: 1.5; stroke-dasharray: 4 5; }
+    .m { fill: none; stroke: #204e3a; stroke-width: 2; }
+    .r { fill: none; stroke: #6b46c1; stroke-width: 2; stroke-dasharray: 6 4; }
+    .ah { fill: #204e3a; } .ahr { fill: #6b46c1; }
+    .t { fill: #1e1e1e; font-size: 13px; }
+    .n { fill: #6b756e; font-size: 12px; font-style: italic; }
+    .state { fill: #fff8ec; stroke: #b7791f; stroke-width: 1.5; }
+    .state-t { fill: #7a4f0e; font-size: 12px; font-weight: 600; }
+    .num { fill: #204e3a; } .num-t { fill: #fff; font-size: 11px; font-weight: 700; }
+    @media (prefers-color-scheme: dark) {
+      .bg { fill: #0f1210; }
+      .head { fill: #2a6449; }
+      .life { stroke: #3a423c; }
+      .m { stroke: #6fbf8e; } .ah { fill: #6fbf8e; }
+      .r { stroke: #9f7aea; } .ahr { fill: #9f7aea; }
+      .t { fill: #e8ede9; } .n { fill: #9aa39d; }
+      .state { fill: #231d12; stroke: #d69e2e; } .state-t { fill: #f6c26b; }
+      .num { fill: #4e8a66; }
+    }
+  </style>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="ah" d="M0,0 L10,5 L0,10 z"/></marker>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path class="ahr" d="M0,0 L10,5 L0,10 z"/></marker>
+  </defs>
+  <rect class="bg" width="960" height="470" rx="16"/>
+
+  <!-- actors -->
+  <rect class="head" x="40" y="24" width="150" height="38" rx="10"/><text class="head-t" x="115" y="48" text-anchor="middle">Landlord</text>
+  <rect class="head" x="280" y="24" width="150" height="38" rx="10"/><text class="head-t" x="355" y="48" text-anchor="middle">Tenant</text>
+  <rect class="head" x="530" y="24" width="150" height="38" rx="10"/><text class="head-t" x="605" y="48" text-anchor="middle">Backend</text>
+  <rect class="head" x="770" y="24" width="150" height="38" rx="10"/><text class="head-t" x="845" y="48" text-anchor="middle">Stripe</text>
+  <line class="life" x1="115" y1="62" x2="115" y2="425"/>
+  <line class="life" x1="355" y1="62" x2="355" y2="425"/>
+  <line class="life" x1="605" y1="62" x2="605" y2="425"/>
+  <line class="life" x1="845" y1="62" x2="845" y2="425"/>
+
+  <!-- 1 propose -->
+  <circle class="num" cx="130" cy="96" r="10"/><text class="num-t" x="130" y="100" text-anchor="middle">1</text>
+  <path class="m" d="M115,110 L600,110" marker-end="url(#a)"/>
+  <text class="t" x="150" y="100">POST /api/rent-plans  (tenant found by @username)</text>
+  <rect class="state" x="615" y="96" width="120" height="26" rx="6"/><text class="state-t" x="675" y="113" text-anchor="middle">plan: pending</text>
+
+  <!-- 2 tenant sees -->
+  <circle class="num" cx="370" cy="146" r="10"/><text class="num-t" x="370" y="150" text-anchor="middle">2</text>
+  <path class="m" d="M600,160 L360,160" marker-end="url(#a)"/>
+  <text class="t" x="390" y="152">GET /api/rent-plans/pending</text>
+
+  <!-- 3 accept -->
+  <circle class="num" cx="370" cy="196" r="10"/><text class="num-t" x="370" y="200" text-anchor="middle">3</text>
+  <path class="m" d="M355,210 L600,210" marker-end="url(#a)"/>
+  <text class="t" x="390" y="202">"Accept &amp; Pay" → POST /:id/accept</text>
+  <path class="m" d="M605,226 L840,226" marker-end="url(#a)"/>
+  <text class="t" x="625" y="220">checkout.sessions.create</text>
+  <text class="n" x="625" y="244">metadata: { rentPlanId }</text>
+
+  <!-- 4 pay -->
+  <circle class="num" cx="370" cy="276" r="10"/><text class="num-t" x="370" y="280" text-anchor="middle">4</text>
+  <path class="r" d="M355,290 L840,290" marker-end="url(#b)"/>
+  <text class="t" x="390" y="282">redirected to Stripe Checkout, pays the deposit</text>
+
+  <!-- 5 webhook -->
+  <circle class="num" cx="830" cy="326" r="10"/><text class="num-t" x="830" y="330" text-anchor="middle">5</text>
+  <path class="r" d="M845,340 L610,340" marker-end="url(#b)"/>
+  <text class="t" x="640" y="332">checkout.session.completed</text>
+  <rect class="state" x="470" y="352" width="126" height="26" rx="6"/><text class="state-t" x="533" y="369" text-anchor="middle">plan: completed</text>
+  <text class="n" x="614" y="370">tenant linked to landlord</text>
+
+  <!-- 6 back -->
+  <circle class="num" cx="370" cy="400" r="10"/><text class="num-t" x="370" y="404" text-anchor="middle">6</text>
+  <path class="m" d="M840,414 L360,414" marker-end="url(#a)"/>
+  <text class="t" x="390" y="406">success_url → /rent-plan?success=true, page reloads plans</text>
+  <text class="n" x="40" y="452">Bills also go through Stripe Checkout, but (hackathon shortcut) are marked paid as soon as the session is created. On-time = +10% of the amount in points.</text>
+</svg>

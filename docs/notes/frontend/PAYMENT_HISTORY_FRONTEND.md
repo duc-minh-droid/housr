@@ -255,7 +255,7 @@ Headers: {
 
 2. **Login as landlord**:
 
-   - Use: `lord@gmail.com` / password from backend
+   - Use a landlord account you registered locally
 
 3. **Navigate to Tenants page**:
 
