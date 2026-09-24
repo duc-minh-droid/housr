@@ -1,5 +1,7 @@
 # Financr (housr)
 
+**Live demo:** https://housr.vercel.app (demo accounts, sample data)
+
 A rental finance app for tenants and landlords: rent plans, bills, budgets, a points-based rewards shop and an AI assistant that reads your own spending. Built in a weekend hackathon in November 2025.
 
 ![Demo: landing page, tenant dashboard, setting a budget, accepting a rent plan, redeeming a reward, asking the AI assistant](docs/media/demo.gif)
