@@ -5,6 +5,7 @@ export interface User {
   id: string;
   email: string;
   name: string;
+  username?: string;
   role: UserRole;
   points?: number; // Only for tenants
   landlordId?: string; // Only for tenants
@@ -34,7 +35,7 @@ export interface Expense {
 }
 
 // Rent plan types
-export type RentPlanStatus = 'pending' | 'approved' | 'rejected';
+export type RentPlanStatus = 'pending' | 'approved' | 'rejected' | 'completed';
 
 export interface RentPlan {
   id: string;
@@ -45,7 +46,7 @@ export interface RentPlan {
   duration: number; // in months
   status: RentPlanStatus;
   proposedDate: string;
-  reviewedDate?: string;
+  reviewedDate?: string | null;
 }
 
 // Reward types

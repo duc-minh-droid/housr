@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button, Alert } from '@/components/UIComponents';
 import { User, Mail, Lock, Save, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { apiFetch } from '@/lib/demoFetch';
 
 export default function SettingsPage() {
   const { user, login } = useAuth();
@@ -60,7 +61,7 @@ export default function SettingsPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5001/api/profile/update', {
+      const response = await apiFetch('/api/profile/update', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -121,7 +122,7 @@ export default function SettingsPage() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5001/api/profile/password', {
+      const response = await apiFetch('/api/profile/password', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -159,8 +160,8 @@ export default function SettingsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <h1 className="text-3xl font-bold text-card-text mb-2">Account Settings</h1>
-        <p className="text-card-text/70 mb-8">Manage your profile and security settings</p>
+        <h1 className="text-3xl font-bold text-foreground mb-2">Account Settings</h1>
+        <p className="text-foreground/60 mb-8">Manage your profile and security settings</p>
 
         {alert && (
           <Alert type={alert.type} message={alert.message} onClose={() => setAlert(null)} className="mb-6" />

@@ -6,7 +6,7 @@ import { Button, Modal, Alert } from '@/components/UIComponents';
 import { rewardsApi } from '@/lib/api';
 
 export default function ShopPage() {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const [points, setPoints] = useState(0);
   const [shopItems, setShopItems] = useState<any[]>([]);
   const [redemptions, setRedemptions] = useState<any[]>([]);
@@ -55,6 +55,8 @@ export default function ShopPage() {
     
     try {
       await rewardsApi.redeemItem(selectedItem.id);
+      // Keep the sidebar's points badge in sync with the new balance
+      updateUser({ ...user, points: Math.max(0, (user.points || 0) - selectedItem.pointCost) });
       setAlert({
         type: 'success',
         message: `Successfully redeemed ${selectedItem.name}!`,
@@ -79,8 +81,8 @@ export default function ShopPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-card-text">Rewards Marketplace</h1>
-        <p className="text-card-text/70 mt-1">Redeem your points for amazing rewards!</p>
+        <h1 className="text-3xl font-bold text-foreground">Rewards Marketplace</h1>
+        <p className="text-foreground/60 mt-1">Redeem your points for amazing rewards!</p>
       </div>
 
       {/* Alert */}

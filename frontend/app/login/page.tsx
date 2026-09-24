@@ -8,6 +8,7 @@ import { Mail, Lock, Sparkles, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { authApi } from '@/lib/api';
 import { Button, Alert } from '@/components/UIComponents';
+import { useDemoLogin } from '@/lib/useDemoLogin';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -39,23 +40,10 @@ export default function LoginPage() {
     }
   };
 
-  // Demo account quick login
-  const handleDemoLogin = async (role: 'tenant' | 'landlord') => {
-    const demoCredentials = {
-      tenant: { email: 'demo@example.com', password: 'demo' },
-      landlord: { email: 'landlord@example.com', password: 'demo' },
-    };
-    
-    setEmail(demoCredentials[role].email);
-    setPassword(demoCredentials[role].password);
-    
-    setTimeout(() => {
-      document.querySelector<HTMLFormElement>('form')?.requestSubmit();
-    }, 100);
-  };
+  const { loginAsDemo, pending: demoPending } = useDemoLogin();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-8">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -70,7 +58,7 @@ export default function LoginPage() {
             transition={{ type: "spring", duration: 0.6, bounce: 0.5 }}
             className="inline-flex items-center gap-2 mb-4"
           >
-            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-blue-600 to-blue-400 flex items-center justify-center shadow-lg shadow-blue-600/30">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-primary to-primary-light flex items-center justify-center shadow-lg shadow-primary/30">
               <Sparkles className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
             </div>
             <span className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-primary to-primary-light bg-clip-text text-transparent">Financr</span>
@@ -163,12 +151,13 @@ export default function LoginPage() {
 
           {/* Demo Accounts */}
           <div className="mt-6 pt-6 border-t border-gray-100 dark:border-gray-700">
-            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center mb-3 font-medium">Quick Demo Access:</p>
+            <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center mb-3 font-medium">Explore with sample data (no account needed)</p>
             <div className="grid grid-cols-2 gap-3">
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => handleDemoLogin('tenant')}
+                onClick={() => loginAsDemo('tenant')}
+                disabled={demoPending !== null}
                 fullWidth
               >
                 <span className="text-xs sm:text-sm">Demo Tenant</span>
@@ -176,7 +165,8 @@ export default function LoginPage() {
               <Button
                 variant="secondary"
                 size="sm"
-                onClick={() => handleDemoLogin('landlord')}
+                onClick={() => loginAsDemo('landlord')}
+                disabled={demoPending !== null}
                 fullWidth
               >
                 <span className="text-xs sm:text-sm">Demo Landlord</span>

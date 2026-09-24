@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { authApi } from '@/lib/api';
 import { User, Mail, Lock, UserCircle, Building } from 'lucide-react';
+import { API_BASE_URL } from '@/lib/demoFetch';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -63,7 +64,7 @@ export default function SignupPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('http://localhost:5001/api/auth/register', {
+      const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -99,7 +100,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -111,7 +112,7 @@ export default function SignupPage() {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
-            className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+            className="text-4xl font-bold bg-gradient-to-r from-emerald-300 to-primary-light bg-clip-text text-transparent"
           >
             Create Account
           </motion.h1>
@@ -119,7 +120,7 @@ export default function SignupPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.2 }}
-            className="mt-2 text-gray-600"
+            className="mt-2 text-foreground/60"
           >
             Join our rental management platform
           </motion.p>

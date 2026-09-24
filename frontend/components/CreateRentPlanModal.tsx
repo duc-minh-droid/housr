@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Search, User, DollarSign, Calendar, FileText, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { apiFetch } from '@/lib/demoFetch';
 
 interface TenantSearchResult {
   id: string;
@@ -26,7 +27,7 @@ export function CreateRentPlanModal({ isOpen, onClose, onSuccess }: CreateRentPl
   const [showDropdown, setShowDropdown] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [searchError, setSearchError] = useState('');
-  const searchTimeout = useRef<NodeJS.Timeout>();
+  const searchTimeout = useRef<NodeJS.Timeout | undefined>(undefined);
 
   const [formData, setFormData] = useState({
     monthlyRent: '',
@@ -55,8 +56,8 @@ export function CreateRentPlanModal({ isOpen, onClose, onSuccess }: CreateRentPl
     searchTimeout.current = setTimeout(async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch(
-          `http://localhost:5001/api/users/search?username=${encodeURIComponent(searchQuery)}`,
+        const response = await apiFetch(
+          `/api/users/search?username=${encodeURIComponent(searchQuery)}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -127,7 +128,7 @@ export function CreateRentPlanModal({ isOpen, onClose, onSuccess }: CreateRentPl
 
       console.log('Sending rent plan:', payload);
 
-      const response = await fetch('http://localhost:5001/api/rent-plans', {
+      const response = await apiFetch('/api/rent-plans', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

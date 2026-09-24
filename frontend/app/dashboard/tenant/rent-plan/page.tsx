@@ -80,7 +80,11 @@ export default function TenantRentPlanPage() {
       const response = await rentPlansApi.acceptPlan(planId);
 
       // Redirect to Stripe checkout
-      if (response.sessionUrl) {
+      if (response.sessionUrl?.startsWith('/')) {
+        // Demo mode: in-app "checkout" (a full reload would reset the in-memory demo data)
+        router.push(response.sessionUrl);
+        setProcessingPlanId(null);
+      } else if (response.sessionUrl) {
         window.location.href = response.sessionUrl;
       } else {
         setAlert({
@@ -143,8 +147,8 @@ export default function TenantRentPlanPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-card-text">Rent Plan</h1>
-        <p className="text-card-text/70 mt-1">
+        <h1 className="text-3xl font-bold text-foreground">Rent Plan</h1>
+        <p className="text-foreground/60 mt-1">
           View and manage your rental agreements
         </p>
       </div>
@@ -302,7 +306,7 @@ export default function TenantRentPlanPage() {
                     <p className="text-xs text-card-text/70 mb-1">
                       Deposit (Due Now)
                     </p>
-                    <p className="text-xl font-bold text-primary">
+                    <p className="text-xl font-bold text-primary dark:text-emerald-300">
                       {formatCurrency(plan.deposit)}
                     </p>
                   </div>

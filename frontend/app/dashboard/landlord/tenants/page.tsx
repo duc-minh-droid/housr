@@ -106,8 +106,8 @@ export default function TenantsPage() {
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-3xl font-bold text-card-text">Tenants</h1>
-        <p className="text-card-text/70 mt-1">Manage your tenants and view their information</p>
+        <h1 className="text-3xl font-bold text-foreground">Tenants</h1>
+        <p className="text-foreground/60 mt-1">Manage your tenants and view their information</p>
       </motion.div>
 
       {/* Summary Stats */}

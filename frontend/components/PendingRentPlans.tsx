@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Check, X, DollarSign, Calendar, Clock, FileText, Loader2, AlertCircle, User } from 'lucide-react';
 import { formatCurrency, formatDate } from '@/lib/utils';
+import { apiFetch } from '@/lib/demoFetch';
 
 interface PendingPlan {
   id: string;
@@ -34,7 +35,7 @@ export function PendingRentPlans() {
     try {
       setIsLoading(true);
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5001/api/rent-plans/pending', {
+      const response = await apiFetch('/api/rent-plans/pending', {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -56,7 +57,7 @@ export function PendingRentPlans() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/rent-plans/${planId}/accept`, {
+      const response = await apiFetch(`/api/rent-plans/${planId}/accept`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -88,7 +89,7 @@ export function PendingRentPlans() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/rent-plans/${planId}/reject`, {
+      const response = await apiFetch(`/api/rent-plans/${planId}/reject`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

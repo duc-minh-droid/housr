@@ -5,6 +5,7 @@ import { Button, Alert } from '@/components/UIComponents';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { Building, Plus, Users, DollarSign, Calendar, AlertCircle, Trash2, UserPlus, Home } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { apiFetch } from '@/lib/demoFetch';
 
 export default function PropertiesPage() {
   const { user } = useAuth();
@@ -24,8 +25,8 @@ export default function PropertiesPage() {
       setIsLoading(true);
       const token = localStorage.getItem('token');
       const [propertiesRes, tenantsRes] = await Promise.all([
-        fetch('http://localhost:5001/api/properties', { headers: { Authorization: `Bearer ${token}` }}),
-        fetch('http://localhost:5001/api/users/tenants', { headers: { Authorization: `Bearer ${token}` }}),
+        apiFetch('/api/properties', { headers: { Authorization: `Bearer ${token}` }}),
+        apiFetch('/api/users/tenants', { headers: { Authorization: `Bearer ${token}` }}),
       ]);
       if (propertiesRes.ok) { const data = await propertiesRes.json(); setProperties(data.properties || []); }
       if (tenantsRes.ok) { const data = await tenantsRes.json(); setTenants(data.tenants || []); }
@@ -37,7 +38,7 @@ export default function PropertiesPage() {
     const formData = new FormData(e.currentTarget);
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5001/api/properties', {
+      const response = await apiFetch('/api/properties', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ name: formData.get('name'), address: formData.get('address'), units: formData.get('units'), monthlyRent: formData.get('monthlyRent'), description: formData.get('description') }),
@@ -51,7 +52,7 @@ export default function PropertiesPage() {
     if (!confirm('Delete this property?')) return;
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/properties/${propertyId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` }});
+      const response = await apiFetch(`/api/properties/${propertyId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` }});
       if (response.ok) { setAlert({ type: 'success', message: 'Property deleted!' }); loadData(); }
       else { throw new Error('Failed'); }
     } catch (error: any) { setAlert({ type: 'error', message: error.message }); }
@@ -61,7 +62,7 @@ export default function PropertiesPage() {
     if (!selectedProperty) return;
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5001/api/properties/assign-tenant', {
+      const response = await apiFetch('/api/properties/assign-tenant', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ propertyId: selectedProperty.id, tenantId }),
@@ -75,7 +76,7 @@ export default function PropertiesPage() {
     if (!confirm('Remove tenant?')) return;
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5001/api/properties/tenants/${tenantId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` }});
+      const response = await apiFetch(`/api/properties/tenants/${tenantId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` }});
       if (response.ok) { setAlert({ type: 'success', message: 'Tenant removed!' }); loadData(); }
       else { throw new Error('Failed'); }
     } catch (error: any) { setAlert({ type: 'error', message: error.message }); }
@@ -93,7 +94,7 @@ export default function PropertiesPage() {
   return (
     <div className="container mx-auto p-4 sm:p-6 lg:p-8">
       <div className="flex justify-between items-center mb-6">
-        <div><h1 className="text-3xl font-bold text-card-text">Properties</h1><p className="text-card-text/70 mt-1">Manage rental properties</p></div>
+        <div><h1 className="text-3xl font-bold text-foreground">Properties</h1><p className="text-foreground/60 mt-1">Manage rental properties</p></div>
         <Button onClick={() => setIsCreateModalOpen(true)} variant="primary"><Plus className="w-5 h-5" />Add Property</Button>
       </div>
 

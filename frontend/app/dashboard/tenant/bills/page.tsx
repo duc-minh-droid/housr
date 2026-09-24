@@ -81,8 +81,8 @@ export default function TenantBillsPage() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold text-card-text">Bills</h1>
-        <p className="text-card-text/70 mt-1">View and pay your bills</p>
+        <h1 className="text-3xl font-bold text-foreground">Bills</h1>
+        <p className="text-foreground/60 mt-1">View and pay your bills</p>
       </div>
 
       {/* Alert */}

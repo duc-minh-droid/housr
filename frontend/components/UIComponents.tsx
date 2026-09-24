@@ -48,7 +48,7 @@ export function DashboardCard({ title, value, subtitle, icon, trend, delay = 0, 
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             transition={{ delay: delay + 0.1, type: "spring" }}
-            className="text-2xl sm:text-3xl font-bold text-card-text truncate"
+            className="text-[1.35rem] sm:text-[1.4rem] font-bold tracking-tight text-card-text truncate"
           >
             {value}
           </motion.p>
@@ -68,7 +68,7 @@ export function DashboardCard({ title, value, subtitle, icon, trend, delay = 0, 
             initial={{ scale: 0, rotate: -180 }}
             animate={{ scale: 1, rotate: 0 }}
             transition={{ delay: delay + 0.15, type: "spring", stiffness: 200 }}
-            className="flex-shrink-0 w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-white/10 backdrop-blur-sm flex items-center justify-center text-white"
+            className="flex-shrink-0 w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center text-white"
           >
             {icon}
           </motion.div>
@@ -111,9 +111,10 @@ interface AlertProps {
   message: string;
   onClose?: () => void;
   icon?: ReactNode;
+  className?: string;
 }
 
-export function Alert({ type, message, onClose, icon }: AlertProps) {
+export function Alert({ type, message, onClose, icon, className }: AlertProps) {
   const styles = {
     success: 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-800 dark:text-green-300',
     warning: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800 text-yellow-800 dark:text-yellow-300',
@@ -129,7 +130,8 @@ export function Alert({ type, message, onClose, icon }: AlertProps) {
       transition={{ type: "spring", stiffness: 300, damping: 25 }}
       className={cn(
         'border rounded-2xl p-4 flex items-start gap-3 shadow-sm backdrop-blur-sm',
-        styles[type]
+        styles[type],
+        className
       )}
     >
       {icon && (
@@ -213,6 +215,7 @@ interface ButtonProps {
   type?: 'button' | 'submit';
   fullWidth?: boolean;
   size?: 'sm' | 'md' | 'lg';
+  className?: string;
 }
 
 export function Button({
@@ -223,6 +226,7 @@ export function Button({
   type = 'button',
   fullWidth = false,
   size = 'md',
+  className,
 }: ButtonProps) {
   const baseStyles = 'rounded-xl font-semibold transition-all inline-flex items-center justify-center gap-2 active:scale-95';
   
@@ -252,7 +256,8 @@ export function Button({
         variants[variant],
         sizes[size],
         disabled && 'opacity-50 cursor-not-allowed',
-        fullWidth && 'w-full'
+        fullWidth && 'w-full',
+        className
       )}
     >
       {children}

@@ -1,5 +1,8 @@
 @import "tailwindcss";
 
+/* Class-based dark mode so the in-app theme toggle drives `dark:` utilities */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   /* Light Mode - White background with Green containers */
   --background: #FFFFFF;
@@ -31,6 +34,18 @@
   --surface: #1A1F1C;              /* Dark surface */
   --text-light: #1E1E1E;
   --text-dark: #E8EDE9;
+  --primary-light: #4E8A66;        /* brighter end of gradients / accent text on dark */
+
+  /* Re-tint Tailwind's (blue-ish) gray scale towards the Financr green-black
+     palette, so the many `dark:bg-gray-800` style utilities match the cards. */
+  --color-gray-950: #0B0E0C;
+  --color-gray-900: #131714;
+  --color-gray-800: #1A1F1C;
+  --color-gray-700: #262D28;
+  --color-gray-600: #3A423C;
+  --color-gray-500: #6B756E;
+  --color-gray-400: #9AA39D;
+  --color-gray-300: #C4CBC6;
 }
 
 @theme inline {
